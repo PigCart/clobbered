@@ -1,0 +1,21 @@
+mod.id = "clobbered"
+mod.name = "Clobbered"
+mod.version = "0.1.0"
+mod.description = "Clobber your enemies by throwing items at them"
+mod.author = "pigcart"
+mod.sources = "https://github.com/PigCart/clobbered"
+mod.issues = "https://github.com/PigCart/clobbered/issues?q=is%3Aissue"
+mod.homepage = "https://modrinth.com/mod/clobbered"
+mod.license = "MIT"
+mod.icon = "assets/clobbered/icon.png"
+
+mod.group = "pigcart"
+
+deps.fabric-loader = "0.18.4"
+
+["26.1-fabric"]
+deps.minecraft = "26.1"
+version_range = ">=26.1"
+
+deps.fabric-api = "0.145.3+26.1.1"
+deps.modmenu = "18.0.0-alpha.8"

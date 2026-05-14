@@ -1,0 +1,19 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "pigcart.clobbered.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "mixins": [
+    "ButtonBlockMixin",
+    "PlayerAccessor",
+    "ServerPlayerMixin"
+  ],
+  "client": [
+    "client.AbstractWidgetMixin",
+    "client.MinecraftMixin"
+  ],
+  "refmap": "clobbered.refmap.json"
+}

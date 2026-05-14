@@ -1,0 +1,12 @@
+{
+  "clobbered.title": "Clobbered",
+
+  "clobbered.minimumDropStrength": "Minimum drop strength",
+  "clobbered.maximumDropStrength": "Maximum drop strength",
+  "clobbered.showStrengthBar": "Show strength bar",
+  "clobbered.interactionRadius": "Item interaction radius",
+  "clobbered.damagePowerScaling": "Damage power scaling",
+  "death.attack.clobber": "%s was clobbered by a dropped item",
+  "death.attack.clobber.item": "%2$s clobbered %1$s with a dropped item",
+  "death.attack.clobber.player": "%2$s clobbered %1$s with a dropped item"
+}
