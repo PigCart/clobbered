@@ -40,8 +40,6 @@ public class LobbedItemRenderer extends EntityRenderer<LobbedItem, LobbedItemRen
             state.impaledRot = item.impaledEntity.getPreciseBodyRotation(partialTicks);
             item.setPos(item.impaledEntity.position().add(item.getImpaleOffset()));
         }
-        state.velocity = item.getDeltaMovement().toVector3f().add(0.01F, 0, 0);
-        state.thrownRotation = item.getEntityData().get(LobbedItem.ROTATION_YAW);
         // if impaling entity, add entity rotation to impale rot.
         state.yRot = item.getYRot(partialTicks);
         state.xRot = item.getXRot(partialTicks);
@@ -61,7 +59,6 @@ public class LobbedItemRenderer extends EntityRenderer<LobbedItem, LobbedItemRen
             }
             // set rotation
             if (state.impaling || state.hurled) {
-                //poseStack.mulPose(Axis.YN.rotationDegrees(state.thrownRotation));
                 poseStack.mulPose(Axis.YN.rotationDegrees(state.yRot - 90F));
                 poseStack.mulPose(Axis.ZP.rotationDegrees(state.xRot + 135F));
             } else {
@@ -82,8 +79,6 @@ public class LobbedItemRenderer extends EntityRenderer<LobbedItem, LobbedItemRen
         boolean hurled;
         boolean impaling;
         float impaledRot;
-        Vector3f velocity;
-        float thrownRotation;
         public float xRot;
         public float yRot;
     }

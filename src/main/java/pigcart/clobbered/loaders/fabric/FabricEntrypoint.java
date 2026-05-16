@@ -5,11 +5,6 @@ import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.MobCategory;
 import pigcart.clobbered.*;
 import pigcart.clobbered.networking.LobItemServerboundPayload;
 
@@ -26,23 +21,9 @@ public class FabricEntrypoint implements ModInitializer {
 
         PayloadTypeRegistry.serverboundPlay().register(LobItemServerboundPayload.TYPE, LobItemServerboundPayload.CODEC);
 
-        ServerPlayNetworking.registerGlobalReceiver(LobItemServerboundPayload.TYPE, (payload, ctx) -> {
-            int strength = payload.strength();
-            ((PlayerDropExtension)ctx.player()).clobbered$setLobStrength(strength);
-            ctx.player().drop(payload.lobAll());
-        });
+        ServerPlayNetworking.registerGlobalReceiver(LobItemServerboundPayload.TYPE, Clobbered::handleLobItem);
 
-        Identifier entityId = Util.getId("lobbed_item");
-
-        Clobbered.LOBBED_ITEM = Registry.register(BuiltInRegistries.ENTITY_TYPE, entityId,
-                EntityType.Builder.<LobbedItem>of(LobbedItem::new, MobCategory.MISC)
-                        .clientTrackingRange(64)
-                        .sized(0.5f, 0.5f)
-                        .updateInterval(3)
-                        .noLootTable()
-                        .noSummon()
-                        .build(ResourceKey.create(Registries.ENTITY_TYPE, entityId))
-        );
+        Registry.register(BuiltInRegistries.ENTITY_TYPE, Clobbered.LOBBED_ITEM_ID, Clobbered.LOBBED_ITEM);
 
         Clobbered.onInitialize();
     }

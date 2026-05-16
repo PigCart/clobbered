@@ -16,7 +16,6 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.entity.monster.EnderMan;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
 import net.minecraft.world.item.BlockItem;
@@ -28,6 +27,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.*;
+import org.apache.logging.log4j.core.pattern.NotANumber;
 import org.joml.Vector3f;
 import org.joml.Vector3fc;
 import pigcart.clobbered.mixin.PlayerAccessor;
@@ -73,6 +73,7 @@ public class LobbedItem extends AbstractArrow {
     protected void addAdditionalSaveData(final ValueOutput output) {
         super.addAdditionalSaveData(output);
         output.store("Hurled", Codec.BOOL, isHurled());
+        output.store("Impaling", Codec.BOOL, isImpaling());
         /*output.store("RotationOffsetW", Codec.FLOAT, entityData.get(IMPALE_ROTATION_OFFSET));
         output.store("RotationOffsetX", Codec.FLOAT, entityData.get(IMPALE_ROTATION_OFFSET).x());
         output.store("RotationOffsetY", Codec.FLOAT, entityData.get(IMPALE_ROTATION_OFFSET).y());
@@ -83,6 +84,7 @@ public class LobbedItem extends AbstractArrow {
     protected void readAdditionalSaveData(final ValueInput input) {
         super.readAdditionalSaveData(input);
         setHurled(input.read("Hurled", Codec.BOOL).orElse(false));
+        setImpaling(input.read("Impaling", Codec.BOOL).orElse(false));
         /*entityData.set(IMPALE_ROTATION_OFFSET, new Quaternionf(
                 input.read("RotationOffsetX", Codec.FLOAT).orElse(0F),
                 input.read("RotationOffsetY", Codec.FLOAT).orElse(0F),
@@ -99,6 +101,7 @@ public class LobbedItem extends AbstractArrow {
     public ItemStack getRenderItemStack() { return this.entityData.get(RENDERED_ITEM); }
     public float getRotation() { return entityData.get(ROTATION_YAW); }
     public boolean isImpaling() { return this.entityData.get(IMPALING); }
+    public void setImpaling(boolean value) { this.entityData.set(IMPALING, value); }
     public boolean isImpalingEntity() { return this.entityData.get(IMPALED_ENTITY) != -1; }
     public Vec3 getImpaleOffset() { return new Vec3(entityData.get(IMPALE_OFFSET)); }
     public boolean isHurled() { return this.entityData.get(HURLED); }
@@ -113,10 +116,15 @@ public class LobbedItem extends AbstractArrow {
         this.setDeltaMovement(velocity);
         this.entityData.set(ROTATION_YAW, this.getDeltaMovement().rotation().y);
         this.setPickupItemStack(itemStack);
-        this.setRenderItemStack(itemStack);
         setHurled(hurled);
         this.setOwner(owner);
         this.setSoundEvent(SoundEvents.EMPTY);
+    }
+
+    @Override
+    protected void setPickupItemStack(ItemStack itemStack) {
+        this.setRenderItemStack(itemStack);
+        super.setPickupItemStack(itemStack);
     }
 
     @Override
@@ -136,7 +144,7 @@ public class LobbedItem extends AbstractArrow {
     @Override
     public void tick() {
         super.tick();
-        if (!isImpaling()) {
+        if (!isImpaling() && isHurled()) {
             Vec2 rotation = this.getDeltaMovement().rotation();
             this.setRot(rotation.y, rotation.x);
         }
@@ -149,11 +157,6 @@ public class LobbedItem extends AbstractArrow {
             }
         }
     }
-
-    /*@Override
-    protected Item getDefaultItem() {
-        return Items.BARRIER;
-    }*/
 
     @Override
     protected boolean updateFluidInteraction() {
@@ -180,11 +183,10 @@ public class LobbedItem extends AbstractArrow {
 
     @Override
     protected void onHitBlock(BlockHitResult hitResult) {
-        super.onHitBlock(hitResult);
         final Vec3 hitPos = hitResult.getLocation();
         if (isHurled() && this.getPickupItem().is(Clobbered.SHARP)) {
-            float normalOffset = 0.1F;
-            impaleBlock(hitPos.add(hitResult.getDirection().getUnitVec3().multiply(normalOffset, normalOffset, normalOffset)));
+            //float normalOffset = 0.1F;
+            impaleBlock(hitPos);
         } else {
             drop(10, hitPos.x, hitPos.y, hitPos.z);
         }
@@ -210,7 +212,7 @@ public class LobbedItem extends AbstractArrow {
             // cobble - 4      8    2.6
             // planks - 2.5    5    1.6
             // obsidian - 625  1250 416
-            damage *= Math.pow(hardness, 0.2);
+            damage *= Math.pow(hardness, config.damageScalingPower);
             // cobble - 1.3    1.5  1.2
             // planks - 1.2    1.4  1.1
             // obsidian - 3.6  4.2  3.3
@@ -276,13 +278,13 @@ public class LobbedItem extends AbstractArrow {
         this.entityData.set(IMPALE_OFFSET, impalePos.subtract(entity.position()).toVector3f());
         this.entityData.set(ROTATION_YAW, impaleRotation.y);
         this.entityData.set(IMPALED_ENTITY, entity.getId());
-        this.entityData.set(IMPALING, true);
+        setImpaling(true);
         if (entity instanceof Mob mob) mob.setPersistenceRequired();
     }
 
     public void impaleBlock(Vec3 impalePos) {
-        this.entityData.set(ROTATION_YAW, this.getDeltaMovement().rotation().y);
-        this.entityData.set(IMPALING, true);
+        //this.entityData.set(ROTATION_YAW, this.getDeltaMovement().rotation().y);
+        setImpaling(true);
         //setDeltaMovement(0, 0, 0);
         //this.setNoGravity(true);
         //setPos(impalePos);
@@ -305,5 +307,11 @@ public class LobbedItem extends AbstractArrow {
             }
         }
         return InteractionResult.SUCCESS;
+    }
+
+    /// usually used for redirectable projectiles - server kicks for "attempting to attack invalid entity" when false.
+    @Override
+    public boolean isAttackable() {
+        return true;
     }
 }
