@@ -12,8 +12,10 @@ import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.phys.AABB;
-import org.joml.Vector3f;
+import net.minecraft.world.phys.Vec2;
+import net.minecraft.world.phys.Vec3;
 
 public class LobbedItemRenderer extends EntityRenderer<LobbedItem, LobbedItemRenderer.LobbedItemRenderState> {
 
@@ -32,19 +34,28 @@ public class LobbedItemRenderer extends EntityRenderer<LobbedItem, LobbedItemRen
     }
 
     @Override
-    public void extractRenderState(LobbedItem item, LobbedItemRenderState state, float partialTicks) {
+    public void extractRenderState(LobbedItem lobbedItem, LobbedItemRenderState state, float partialTicks) {
         state.animOffset = this.animOffset;
-        state.hurled = item.isHurled();
-        state.impaling = item.isImpaling();
-        if (item.isImpalingEntity()) {
-            state.impaledRot = item.impaledEntity.getPreciseBodyRotation(partialTicks);
-            item.setPos(item.impaledEntity.position().add(item.getImpaleOffset()));
+        state.hurled = lobbedItem.isHurled();
+        state.impaling = lobbedItem.isImpaling();
+        if (lobbedItem.isInEntity()) {
+            state.xRot = lobbedItem.getEntityData().get(LobbedItem.IMPALE_ROT_X);
+            float impaledBodyRot = lobbedItem.impaledEntity.getPreciseBodyRotation(partialTicks);
+            state.yRot = impaledBodyRot + lobbedItem.getEntityData().get(LobbedItem.IMPALE_ROT_Y);
+            Vec3 offset = Vec3.applyLocalCoordinatesToRotation(new Vec2(0, impaledBodyRot), lobbedItem.getImpaleOffset());
+            lobbedItem.setPos(lobbedItem.impaledEntity.position().add(offset));
+        } else {
+            state.xRot = lobbedItem.getXRot(partialTicks); // pitch
+            state.yRot = lobbedItem.getYRot(partialTicks); // yaw
         }
-        // if impaling entity, add entity rotation to impale rot.
-        state.yRot = item.getYRot(partialTicks);
-        state.xRot = item.getXRot(partialTicks);
-        super.extractRenderState(item, state, partialTicks);
-        state.extractItemGroupRenderState(item, item.getRenderItemStack(), this.itemModelResolver);
+        super.extractRenderState(lobbedItem, state, partialTicks);
+        state.extractItemGroupRenderState(lobbedItem, lobbedItem.getRenderItemStack(), this.itemModelResolver);
+        if (state.hurled) itemModelResolver.updateForTopItem(state.item,
+                lobbedItem.getRenderItemStack(),
+                ItemDisplayContext.THIRD_PERSON_RIGHT_HAND,
+                lobbedItem.level(),
+                lobbedItem,
+                0);
     }
 
     @Override
@@ -52,15 +63,15 @@ public class LobbedItemRenderer extends EntityRenderer<LobbedItem, LobbedItemRen
         if (!state.item.isEmpty()) {
             poseStack.pushPose();
             AABB boundingBox = state.item.getModelBoundingBox();
-            // scale hurled items to held size
-            if (state.hurled) {
-                float scale = 1.5F;
-                poseStack.scale(scale, scale, scale);
-            }
             // set rotation
             if (state.impaling || state.hurled) {
-                poseStack.mulPose(Axis.YN.rotationDegrees(state.yRot - 90F));
-                poseStack.mulPose(Axis.ZP.rotationDegrees(state.xRot + 135F));
+                float scale = -0.5F;
+                Vec3 off = Vec3.directionFromRotation(state.xRot, state.yRot).multiply(scale, scale, scale);
+                poseStack.translate(off);
+                // do rotation after translation
+                poseStack.mulPose(Axis.YN.rotationDegrees(state.yRot));
+                poseStack.mulPose(Axis.XP.rotationDegrees(state.xRot + 100));
+                //if (state.impaling) poseStack.mulPose(Axis.YN.rotationDegrees(state.impaleRot));
             } else {
                 float minOffsetY = -((float)boundingBox.minY) + 0.0625F;
                 float bob = Mth.sin(state.ageInTicks / 10.0F + state.animOffset) * 0.1F + 0.1F;
@@ -78,7 +89,6 @@ public class LobbedItemRenderer extends EntityRenderer<LobbedItem, LobbedItemRen
         float animOffset;
         boolean hurled;
         boolean impaling;
-        float impaledRot;
         public float xRot;
         public float yRot;
     }

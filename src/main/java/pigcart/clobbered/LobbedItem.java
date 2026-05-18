@@ -24,13 +24,15 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.*;
-import org.apache.logging.log4j.core.pattern.NotANumber;
 import org.joml.Vector3f;
 import org.joml.Vector3fc;
 import pigcart.clobbered.mixin.PlayerAccessor;
+
+import java.util.UUID;
 
 import static pigcart.clobbered.config.ConfigManager.config;
 
@@ -41,9 +43,8 @@ public class LobbedItem extends AbstractArrow {
 
     public static final EntityDataAccessor<Integer> IMPALED_ENTITY = defineData(EntityDataSerializers.INT);
     public static final EntityDataAccessor<Vector3fc> IMPALE_OFFSET = defineData(EntityDataSerializers.VECTOR3);
-    public static final EntityDataAccessor<Float> ROTATION_YAW = defineData(EntityDataSerializers.FLOAT);
-    public static final EntityDataAccessor<Float> ROTATION_PITCH = defineData(EntityDataSerializers.FLOAT);
-    public static final EntityDataAccessor<Boolean> IMPALING = defineData(EntityDataSerializers.BOOLEAN);
+    public static final EntityDataAccessor<Float> IMPALE_ROT_X = defineData(EntityDataSerializers.FLOAT);
+    public static final EntityDataAccessor<Float> IMPALE_ROT_Y = defineData(EntityDataSerializers.FLOAT);
     public static final EntityDataAccessor<Boolean> HURLED = defineData(EntityDataSerializers.BOOLEAN);
     public static final EntityDataAccessor<ItemStack> RENDERED_ITEM = defineData(EntityDataSerializers.ITEM_STACK);
 
@@ -56,10 +57,9 @@ public class LobbedItem extends AbstractArrow {
         super.defineSynchedData(builder);
         builder.define(IMPALED_ENTITY, -1);
         builder.define(IMPALE_OFFSET, new Vector3f());
-        builder.define(IMPALING, false);
         builder.define(HURLED, false);
-        builder.define(ROTATION_YAW, 0F);
-        builder.define(ROTATION_PITCH, 0F);
+        builder.define(IMPALE_ROT_X, 0F);
+        builder.define(IMPALE_ROT_Y, 0F);
         builder.define(RENDERED_ITEM, getDefaultPickupItem());
     }
 
@@ -73,24 +73,26 @@ public class LobbedItem extends AbstractArrow {
     protected void addAdditionalSaveData(final ValueOutput output) {
         super.addAdditionalSaveData(output);
         output.store("Hurled", Codec.BOOL, isHurled());
-        output.store("Impaling", Codec.BOOL, isImpaling());
-        /*output.store("RotationOffsetW", Codec.FLOAT, entityData.get(IMPALE_ROTATION_OFFSET));
-        output.store("RotationOffsetX", Codec.FLOAT, entityData.get(IMPALE_ROTATION_OFFSET).x());
-        output.store("RotationOffsetY", Codec.FLOAT, entityData.get(IMPALE_ROTATION_OFFSET).y());
-        output.store("RotationOffsetZ", Codec.FLOAT, entityData.get(IMPALE_ROTATION_OFFSET).z());*/
+        /*output.store("InEntity", Codec.STRING, level().getEntity(entityData.get(IMPALED_ENTITY)).getStringUUID());
+        System.out.println("saving entity id " + entityData.get(IMPALED_ENTITY));
+
+         */
     }
 
     @Override
     protected void readAdditionalSaveData(final ValueInput input) {
         super.readAdditionalSaveData(input);
         setHurled(input.read("Hurled", Codec.BOOL).orElse(false));
-        setImpaling(input.read("Impaling", Codec.BOOL).orElse(false));
-        /*entityData.set(IMPALE_ROTATION_OFFSET, new Quaternionf(
-                input.read("RotationOffsetX", Codec.FLOAT).orElse(0F),
-                input.read("RotationOffsetY", Codec.FLOAT).orElse(0F),
-                input.read("RotationOffsetZ", Codec.FLOAT).orElse(0F),
-                input.read("RotationOffsetW", Codec.FLOAT).orElse(0F)
-        ));*/
+        /*entityData.set(IMPALED_ENTITY, level().getEntity(
+                UUID.fromString(input.read("InEntity", Codec.STRING).orElse(""))
+        ).getId());
+        if (isInEntity()) {
+            impaledEntity = level().getEntity(entityData.get(IMPALED_ENTITY));
+            System.out.println("impaled entity is " + impaledEntity + " with id " + entityData.get(IMPALED_ENTITY));
+            if (impaledEntity == null) {
+                entityData.set(IMPALED_ENTITY, -1);
+            }
+        }*/
     }
 
     @Override
@@ -99,22 +101,17 @@ public class LobbedItem extends AbstractArrow {
     }
     public void setRenderItemStack(ItemStack itemStack) { this.entityData.set(RENDERED_ITEM, itemStack); }
     public ItemStack getRenderItemStack() { return this.entityData.get(RENDERED_ITEM); }
-    public float getRotation() { return entityData.get(ROTATION_YAW); }
-    public boolean isImpaling() { return this.entityData.get(IMPALING); }
-    public void setImpaling(boolean value) { this.entityData.set(IMPALING, value); }
-    public boolean isImpalingEntity() { return this.entityData.get(IMPALED_ENTITY) != -1; }
+    public boolean isImpaling() { return isInGround() || isInEntity(); }
+    public boolean isInEntity() { return this.entityData.get(IMPALED_ENTITY) != -1; }
     public Vec3 getImpaleOffset() { return new Vec3(entityData.get(IMPALE_OFFSET)); }
     public boolean isHurled() { return this.entityData.get(HURLED); }
     public void setHurled(boolean value) { this.entityData.set(HURLED, value); }
-    //public void setItem(final ItemStack source) { this.getEntityData().set(ITEM_STACK, source); }
-    //public ItemStack getItem() { return this.getEntityData().get(ITEM_STACK); }
 
     public LobbedItem(EntityType<LobbedItem> type, Level level) { super(type, level); }
     public LobbedItem(Level level, double x, double y, double z, Vec3 velocity, boolean hurled, ItemStack itemStack, Entity owner) {
         this(Clobbered.LOBBED_ITEM, level);
         this.setPos(x, y, z);
         this.setDeltaMovement(velocity);
-        this.entityData.set(ROTATION_YAW, this.getDeltaMovement().rotation().y);
         this.setPickupItemStack(itemStack);
         setHurled(hurled);
         this.setOwner(owner);
@@ -145,11 +142,13 @@ public class LobbedItem extends AbstractArrow {
     public void tick() {
         super.tick();
         if (!isImpaling() && isHurled()) {
-            Vec2 rotation = this.getDeltaMovement().rotation();
-            this.setRot(rotation.y, rotation.x);
+            // vanilla arrow already does this but in a weird inverted way
+            Vec2 rot = this.getDeltaMovement().rotation();
+            this.setYRot(rot.y);
+            this.setXRot(rot.x);
         }
         if (this.level().isClientSide()) return;
-        if (isImpalingEntity()) {
+        if (isInEntity()) {
             Vec3 entityPos = new Vec3(impaledEntity.getX(), impaledEntity.getY(), impaledEntity.getZ());
             this.setPos(entityPos.add(getImpaleOffset()));
             if (!impaledEntity.isAlive() || impaledEntity.isRemoved()) {
@@ -183,11 +182,13 @@ public class LobbedItem extends AbstractArrow {
 
     @Override
     protected void onHitBlock(BlockHitResult hitResult) {
-        final Vec3 hitPos = hitResult.getLocation();
-        if (isHurled() && this.getPickupItem().is(Clobbered.SHARP)) {
-            //float normalOffset = 0.1F;
-            impaleBlock(hitPos);
-        } else {
+        // super method introduces weird rotation...
+        super.onHitBlock(hitResult);
+        if (!isHurled() || !this.getPickupItem().is(Clobbered.SHARP)) {
+            // prevent dropped items getting stuck in walls
+            Vec3 normal = hitResult.getDirection().getUnitVec3();
+            float scale = 0.25F;
+            final Vec3 hitPos = hitResult.getLocation().add(normal.multiply(scale, scale, scale));
             drop(10, hitPos.x, hitPos.y, hitPos.z);
         }
     }
@@ -273,21 +274,15 @@ public class LobbedItem extends AbstractArrow {
 
     public void impaleEntity(Entity entity, Vec3 impalePos, Vec2 impaleRotation) {
         this.impaledEntity = entity;
-        setDeltaMovement(0, 0, 0);
-        this.setNoGravity(true);
-        this.entityData.set(IMPALE_OFFSET, impalePos.subtract(entity.position()).toVector3f());
-        this.entityData.set(ROTATION_YAW, impaleRotation.y);
+        Vec3 localImpalePos = impalePos.subtract(entity.position());
+        Vec3 impaleOffset = Vec3.applyLocalCoordinatesToRotation(new Vec2(0, -entity.getYRot()), localImpalePos);
+        setDeltaMovement(Vec3.ZERO);
+        this.setNoPhysics(true);
         this.entityData.set(IMPALED_ENTITY, entity.getId());
-        setImpaling(true);
+        this.entityData.set(IMPALE_OFFSET, impaleOffset.toVector3f());
+        this.entityData.set(IMPALE_ROT_X, impaleRotation.x);
+        this.entityData.set(IMPALE_ROT_Y, impaleRotation.y - entity.getYRot());
         if (entity instanceof Mob mob) mob.setPersistenceRequired();
-    }
-
-    public void impaleBlock(Vec3 impalePos) {
-        //this.entityData.set(ROTATION_YAW, this.getDeltaMovement().rotation().y);
-        setImpaling(true);
-        //setDeltaMovement(0, 0, 0);
-        //this.setNoGravity(true);
-        //setPos(impalePos);
     }
 
     @Override
@@ -313,5 +308,10 @@ public class LobbedItem extends AbstractArrow {
     @Override
     public boolean isAttackable() {
         return true;
+    }
+
+    @Override
+    protected void tickDespawn() {
+        // dont
     }
 }
