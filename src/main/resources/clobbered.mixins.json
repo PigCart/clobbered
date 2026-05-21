@@ -12,6 +12,7 @@
   ],
   "client": [
     "client.AbstractWidgetMixin",
+    "client.ItemInHandRendererMixin",
     "client.MinecraftMixin"
   ],
   "refmap": "clobbered.refmap.json"

@@ -1,6 +1,10 @@
 package pigcart.clobbered;
 
 import com.mojang.serialization.Codec;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.particle.ItemPickupParticle;
+import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -24,15 +28,12 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.*;
 import org.joml.Vector3f;
 import org.joml.Vector3fc;
 import pigcart.clobbered.mixin.PlayerAccessor;
-
-import java.util.UUID;
 
 import static pigcart.clobbered.config.ConfigManager.config;
 
@@ -149,8 +150,11 @@ public class LobbedItem extends AbstractArrow {
         }
         if (this.level().isClientSide()) return;
         if (isInEntity()) {
-            Vec3 entityPos = new Vec3(impaledEntity.getX(), impaledEntity.getY(), impaledEntity.getZ());
-            this.setPos(entityPos.add(getImpaleOffset()));
+
+            float impaledBodyRot = impaledEntity.getYRot();
+            Vec3 offset = Vec3.applyLocalCoordinatesToRotation(new Vec2(0, impaledBodyRot), getImpaleOffset());
+            this.setPos(impaledEntity.position().add(offset));
+
             if (!impaledEntity.isAlive() || impaledEntity.isRemoved()) {
                 drop(10);
             }
@@ -172,7 +176,7 @@ public class LobbedItem extends AbstractArrow {
     @Override
     protected void onHit(HitResult hitResult) {
         if (level().isClientSide() || isImpaling()) return;
-        if (getPickupItem().is(Clobbered.EXPLODES)) {
+        if (isHurled() && getPickupItem().is(Clobbered.EXPLODES)) {
             level().explode(this, this.getX(), this.getY(), this.getZ(), 1.0F, Level.ExplosionInteraction.MOB);
             this.discard();
         } else {
@@ -293,14 +297,20 @@ public class LobbedItem extends AbstractArrow {
     @Override
     public InteractionResult interact(Player player, InteractionHand hand, Vec3 location) {
         if (this.getPickupItem().is(Clobbered.UNCATCHABLE)) return InteractionResult.PASS;
-        if (!level().isClientSide()) {
-            if (player.getItemInHand(hand).isEmpty()) {
+        if (player.getItemInHand(hand).isEmpty()) {
+            if (level().isClientSide()) { // do pick-up animation
+                EntityRenderState itemState = Minecraft.getInstance().getEntityRenderDispatcher().extractEntity(this, 1.0F);
+                Minecraft.getInstance().particleEngine.add(
+                        new ItemPickupParticle((ClientLevel) this.level(), itemState, player, this.getDeltaMovement())
+                );
+            } else {
                 player.setItemInHand(hand, this.getPickupItem());
                 this.discard();
-            } else {
-                this.drop(0);
             }
+        } else {
+            if (!level().isClientSide()) this.drop(0);
         }
+
         return InteractionResult.SUCCESS;
     }
 

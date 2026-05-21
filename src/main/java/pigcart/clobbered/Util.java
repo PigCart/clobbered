@@ -23,12 +23,6 @@ import java.util.stream.Stream;
 
 public class Util {
 
-    /*public static Quaternionf rotationFromVelocity(Vector3f velocity) {
-        final float angle = (float)Math.acos(new Vector3f(velocity).normalize().y);
-        Vector3f axis = new Vector3f(-velocity.z, 0, velocity.x).normalize();
-        return new Quaternionf(new AxisAngle4f(-angle, axis));
-    }*/
-
     public static void hotbarMessage(Component component) {
         Minecraft.getInstance().gui.setOverlayMessage(component, false);
     }

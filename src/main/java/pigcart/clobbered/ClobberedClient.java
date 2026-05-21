@@ -9,6 +9,8 @@ import java.util.List;
 
 public class ClobberedClient {
 
+    public static int throwStrength = 0;
+
     public static List<String> getDebugLines() {
         ClientLevel level = Minecraft.getInstance().level;
         if (level == null) return List.of("no level loaded :3");

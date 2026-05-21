@@ -36,9 +36,8 @@ public class LobbedItemRenderer extends EntityRenderer<LobbedItem, LobbedItemRen
     @Override
     public void extractRenderState(LobbedItem lobbedItem, LobbedItemRenderState state, float partialTicks) {
         state.animOffset = this.animOffset;
-        state.hurled = lobbedItem.isHurled();
-        state.impaling = lobbedItem.isImpaling();
-        if (lobbedItem.isInEntity()) {
+        state.useEntityRotation = lobbedItem.isHurled() || lobbedItem.isImpaling();
+        if (lobbedItem.isInEntity()) { // rotate with the entity and position accordingly
             state.xRot = lobbedItem.getEntityData().get(LobbedItem.IMPALE_ROT_X);
             float impaledBodyRot = lobbedItem.impaledEntity.getPreciseBodyRotation(partialTicks);
             state.yRot = impaledBodyRot + lobbedItem.getEntityData().get(LobbedItem.IMPALE_ROT_Y);
@@ -50,7 +49,8 @@ public class LobbedItemRenderer extends EntityRenderer<LobbedItem, LobbedItemRen
         }
         super.extractRenderState(lobbedItem, state, partialTicks);
         state.extractItemGroupRenderState(lobbedItem, lobbedItem.getRenderItemStack(), this.itemModelResolver);
-        if (state.hurled) itemModelResolver.updateForTopItem(state.item,
+        // use held item model instead of dropped item model
+        if (lobbedItem.isHurled()) itemModelResolver.updateForTopItem(state.item,
                 lobbedItem.getRenderItemStack(),
                 ItemDisplayContext.THIRD_PERSON_RIGHT_HAND,
                 lobbedItem.level(),
@@ -63,16 +63,14 @@ public class LobbedItemRenderer extends EntityRenderer<LobbedItem, LobbedItemRen
         if (!state.item.isEmpty()) {
             poseStack.pushPose();
             AABB boundingBox = state.item.getModelBoundingBox();
-            // set rotation
-            if (state.impaling || state.hurled) {
-                float scale = -0.5F;
+            if (state.useEntityRotation) {
+                float scale = -0.4F;
                 Vec3 off = Vec3.directionFromRotation(state.xRot, state.yRot).multiply(scale, scale, scale);
-                poseStack.translate(off);
+                poseStack.translate(off.add(0, 0.1, 0));
                 // do rotation after translation
                 poseStack.mulPose(Axis.YN.rotationDegrees(state.yRot));
                 poseStack.mulPose(Axis.XP.rotationDegrees(state.xRot + 100));
-                //if (state.impaling) poseStack.mulPose(Axis.YN.rotationDegrees(state.impaleRot));
-            } else {
+            } else { // use regular dropped item spin animation
                 float minOffsetY = -((float)boundingBox.minY) + 0.0625F;
                 float bob = Mth.sin(state.ageInTicks / 10.0F + state.animOffset) * 0.1F + 0.1F;
                 poseStack.translate(0.0F, bob + minOffsetY, 0.0F);
@@ -87,8 +85,7 @@ public class LobbedItemRenderer extends EntityRenderer<LobbedItem, LobbedItemRen
 
     public static class LobbedItemRenderState extends ItemClusterRenderState {
         float animOffset;
-        boolean hurled;
-        boolean impaling;
+        boolean useEntityRotation;
         public float xRot;
         public float yRot;
     }

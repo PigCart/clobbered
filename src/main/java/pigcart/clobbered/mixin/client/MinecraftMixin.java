@@ -22,6 +22,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import pigcart.clobbered.Util;
 import pigcart.clobbered.networking.LobItemServerboundPayload;
 
+import static pigcart.clobbered.ClobberedClient.throwStrength;
 import static pigcart.clobbered.config.ConfigManager.config;
 
 @Mixin(Minecraft.class)
@@ -40,9 +41,6 @@ public abstract class MinecraftMixin {
 
     @Unique
     public boolean shouldDrop;
-
-    @Unique
-    public int throwStrength = 0;
 
     @Inject(method = "handleKeybinds", at = @At("HEAD"))
     public void handleDropKeybinds(CallbackInfo ci) {
