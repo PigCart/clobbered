@@ -1,6 +1,7 @@
 package pigcart.clobbered;
 
 import com.mojang.blaze3d.platform.NativeImage;
+import net.minecraft.IdentifierException;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -45,6 +46,17 @@ public class Util {
         *///?} else {
         return Identifier.withDefaultNamespace(path);
         //?}
+    }
+    public static Identifier parseId(String string) {
+        try {
+            //? if <=1.20.1 {
+            return Identifier.tryParse(string);
+            //?} else {
+            /*return Identifier.parse(string);
+             *///?}
+        } catch (IdentifierException e) {
+            return null;
+        }
     }
 
     public static <T> Registry<T> getRegistry(ResourceKey<Registry<T>> key) {

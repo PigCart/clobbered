@@ -28,7 +28,7 @@ Throw items with force! Clobber mobs and players by lobbing things at them.
 - ✔ Items tagged `#clobbered:consumed` will use their default interaction instead of being thrown as an item (e.g: snowballs)
 - ✔ Items tagged `#clobbered:explodes` will explode upon hitting a block or entity when hurled
 - Items tagged `#clobbered:boomerang` will return to the position they're hurled from instead of falling to the floor
-- Blocks can become cracked or broken on impact (eg: stone → cobblestone, anvil → damaged anvil)
+- ✔ Blocks can become cracked or broken on impact (eg: stone → cobblestone, anvil → damaged anvil)
 
 ## Misc
 - Shot arrows can be picked up the same way as stuck items.

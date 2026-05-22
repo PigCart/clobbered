@@ -6,6 +6,8 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.ItemPickupParticle;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.particles.ItemParticleOption;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializer;
@@ -13,6 +15,7 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -23,6 +26,7 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
 import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
@@ -100,7 +104,6 @@ public class LobbedItem extends AbstractArrow {
     protected ItemStack getDefaultPickupItem() {
         return Items.BARRIER.getDefaultInstance();
     }
-    public void setRenderItemStack(ItemStack itemStack) { this.entityData.set(RENDERED_ITEM, itemStack); }
     public ItemStack getRenderItemStack() { return this.entityData.get(RENDERED_ITEM); }
     public boolean isImpaling() { return isInGround() || isInEntity(); }
     public boolean isInEntity() { return this.entityData.get(IMPALED_ENTITY) != -1; }
@@ -121,7 +124,7 @@ public class LobbedItem extends AbstractArrow {
 
     @Override
     protected void setPickupItemStack(ItemStack itemStack) {
-        this.setRenderItemStack(itemStack);
+        this.entityData.set(RENDERED_ITEM, itemStack);
         super.setPickupItemStack(itemStack);
     }
 
@@ -176,12 +179,35 @@ public class LobbedItem extends AbstractArrow {
     @Override
     protected void onHit(HitResult hitResult) {
         if (level().isClientSide() || isImpaling()) return;
-        if (isHurled() && getPickupItem().is(Clobbered.EXPLODES)) {
-            level().explode(this, this.getX(), this.getY(), this.getZ(), 1.0F, Level.ExplosionInteraction.MOB);
-            this.discard();
-        } else {
-            super.onHit(hitResult);
+        if (isHurled()) {
+            ItemStack item = getPickupItem();
+            if (item.is(Clobbered.EXPLODES)) {
+                level().explode(this, this.getX(), this.getY(), this.getZ(), 1.0F, Level.ExplosionInteraction.MOB);
+                this.discard();
+            } else if (config.itemBreakChance > random.nextFloat()) {
+                boolean dropBrokenItem = true;
+                if (item.isDamageableItem()) {
+                    if (item.nextDamageWillBreak()) {
+                        level().playSound(null, blockPosition(), SoundEvents.ITEM_BREAK.value(), SoundSource.PLAYERS);
+                        this.discard();
+                    } else {
+                        item.setDamageValue(getPickupItem().getDamageValue() + 1);
+                        setPickupItemStack(item);
+                        dropBrokenItem = false;
+                    }
+                }
+                if (dropBrokenItem) {
+                    Item brokenItem = config.brokenItems.get(item.getItem());
+                    if (brokenItem != null) {
+                        ItemStack brokenStack = brokenItem.getDefaultInstance();
+                        brokenStack.setCount(item.getCount());
+                        setPickupItemStack(brokenStack);
+                        level().playSound(null, blockPosition(), SoundEvents.ITEM_BREAK.value(), SoundSource.PLAYERS);
+                    }
+                }
+            }
         }
+        super.onHit(hitResult);
     }
 
     @Override

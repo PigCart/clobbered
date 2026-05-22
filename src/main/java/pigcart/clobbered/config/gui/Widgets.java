@@ -23,6 +23,7 @@ import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -227,6 +228,10 @@ public class Widgets {
                         ))
                 )};
                 screen.add(widgets);
+            } else if (type.equals(Map.class)) {
+
+                //TODO
+
             } else {
                 AbstractWidget[] widgets = getRowWidgets(screen, field, name, currentValue, defaultValue, onValueChange, valueFormatter, type);
                 for (AbstractWidget widget : widgets) {

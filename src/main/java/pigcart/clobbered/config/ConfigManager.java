@@ -1,15 +1,22 @@
 package pigcart.clobbered.config;
 
+import com.google.common.reflect.TypeToken;
 import com.google.gson.*;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.item.Item;
 import pigcart.clobbered.Clobbered;
+import pigcart.clobbered.Util;
 
 import java.awt.*;
 import java.io.*;
 import java.lang.reflect.Type;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ConfigManager {
     static final Gson GSON = new GsonBuilder().setPrettyPrinting()
             .registerTypeAdapter(Color.class, new ColorTypeAdapter())
+            .registerTypeAdapter(new TypeToken<Map<Item,Item>>(){}.getType(), new ItemMapTypeAdapter())
             .create();
     static final String CONFIG_PATH = "config/" + Clobbered.MOD_ID + ".json";
     public static ConfigData config = new ConfigData();
@@ -44,7 +51,7 @@ public class ConfigManager {
         try (FileWriter writer = new FileWriter(CONFIG_PATH)) {
             GSON.toJson(config, writer);
         } catch (Exception e) {
-            Clobbered.LOGGER.error(e.getMessage());
+            Clobbered.LOGGER.error("Error saving config {}", e.getMessage());
         }
     }
 
@@ -67,6 +74,33 @@ public class ConfigManager {
         @Override
         public Color deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
             return getColor(json.getAsString());
+        }
+    }
+
+    public static class ItemMapTypeAdapter implements JsonSerializer<Map<Item,Item>>, JsonDeserializer<Map<Item,Item>> {
+        public static Item getItem(String string) {
+            return BuiltInRegistries.ITEM.getValue(Util.parseId(string));
+        }
+        public static String getItemString(Item item) {
+            return BuiltInRegistries.ITEM.getKey(item).toString();
+        }
+
+        @Override
+        public JsonElement serialize(Map<Item,Item> map, Type type, JsonSerializationContext context) {
+            JsonObject object = new JsonObject();
+            map.forEach((fromItem, toItem) ->
+                    object.addProperty(getItemString(fromItem), getItemString(toItem)));
+            return object;
+        }
+        @Override
+        public Map<Item,Item> deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+            Map<Item, Item> map = new HashMap<>();
+            json.getAsJsonObject().entrySet().forEach((entry) -> {
+                Item fromItem = getItem(entry.getKey());
+                Item toItem = getItem(entry.getValue().getAsString());
+                map.put(fromItem, toItem);
+            });
+            return map;
         }
     }
 
