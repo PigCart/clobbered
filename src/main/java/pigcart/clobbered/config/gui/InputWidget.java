@@ -5,6 +5,7 @@ import net.minecraft.client.gui.Font;
 //~ if >=26.1 'GuiGraphics' -> 'GuiGraphicsExtractor' {
 //~}
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
 
 import java.util.function.Consumer;
@@ -30,15 +31,18 @@ public class InputWidget extends EditBox {
     public InputWidget(int width, int x, String initialValue, Consumer<String> onValueChange, Function<Object, Component> valueFormatter) {
         super(Minecraft.getInstance().font, 0, 0, width, Widgets.BUTTON_HEIGHT, Component.empty());
         ((AbstractWidgetAccess)this).pigcart$setOffset(x);
+        this.setMaxLength(64);
         this.valueFormatter = valueFormatter;
         this.setValue(initialValue);
         this.setResponder((value) -> {
             try {
                 onValueChange.accept(value);
+                this.setTooltip(Tooltip.create(Component.empty()));
                 this.setTextColor(EditBox.DEFAULT_TEXT_COLOR);
                 formatValue();
-            } catch (NumberFormatException ignored) {
+            } catch (Exception e) {
                 // keep old value if input invalid
+                this.setTooltip(Tooltip.create(Component.literal(e.getLocalizedMessage())));
                 this.setTextColor(0xFFFF5555); // ARGB equivalent of ChatFormatting.RED. modern mc needs alpha specified
             }
         });
@@ -59,10 +63,10 @@ public class InputWidget extends EditBox {
     public void formatValue() {
         if (this.isFocused()) {
             formattedColor = 0xFF555555;
-            this.setTextColor(EditBox.DEFAULT_TEXT_COLOR);
+            //this.setTextColor(EditBox.DEFAULT_TEXT_COLOR);
         } else {
             formattedColor = EditBox.DEFAULT_TEXT_COLOR;
-            this.setTextColor(0x00000000);
+            //this.setTextColor(0x00000000);
         }
         formattedValue = valueFormatter.apply(this.getValue()).getString();
     }
@@ -80,9 +84,9 @@ public class InputWidget extends EditBox {
         final int x = this.getX() + 4;
         final int y = this.getY() + (this.height - 8) / 2;
         //~ if >=26.1 'drawString' -> 'text' {
-        guiGraphics.text(font, formattedValue, x, y, formattedColor);
+        //guiGraphics.text(font, formattedValue, x, y, formattedColor);
         if (isFocused()) {
-            guiGraphics.text(font, this.getValue(), x, y, EditBox.DEFAULT_TEXT_COLOR);
+            //guiGraphics.text(font, this.getValue(), x, y, EditBox.DEFAULT_TEXT_COLOR);
         }
         //~}
     }

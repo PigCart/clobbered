@@ -9,8 +9,10 @@ import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.Mth;
+import net.minecraft.world.item.Item;
 import pigcart.clobbered.Clobbered;
 import pigcart.clobbered.Util;
+import pigcart.clobbered.config.ConfigManager;
 import pigcart.clobbered.config.gui.Annotations.*;
 import pigcart.clobbered.config.gui.Annotations.Label;
 
@@ -24,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -160,6 +163,9 @@ public class Widgets {
         if (screen.config instanceof List<?>) {
             addListOptions(screen, (List<?>)screen.config, (List<?>)screen.configDefault, screen.configGenericType);
             return;
+        } else if (screen.config instanceof Map<?,?>) {
+            addMapOptions(screen, (Map<Object, Object>) screen.config);
+            return;
         }
         Field[] fields = screen.config.getClass().getFields();
         for (Field field : fields) {
@@ -228,10 +234,6 @@ public class Widgets {
                         ))
                 )};
                 screen.add(widgets);
-            } else if (type.equals(Map.class)) {
-
-                //TODO
-
             } else {
                 AbstractWidget[] widgets = getRowWidgets(screen, field, name, currentValue, defaultValue, onValueChange, valueFormatter, type);
                 for (AbstractWidget widget : widgets) {
@@ -286,11 +288,11 @@ public class Widgets {
                             currentValue.toString(),
                             true
             )))};
-        } else if (type.getFields().length > 0) {
+        } else if (type.equals(Map.class) || type.getFields().length > 0) {
             return new AbstractWidget[]{
                     Widgets.getButton(Component.translatable(name).append("..."), (bttn)->
                             Minecraft.getInstance().setScreen(new ConfigScreen(
-                                    screen,
+                                    screen.getFreshScreen(),
                                     currentValue,
                                     defaultValue,
                                     Component.translatable(name)
@@ -323,7 +325,7 @@ public class Widgets {
             ((AbstractWidgetAccess)removeButton).pigcart$setOffset(BIG_BUTTON_WIDTH - BUTTON_HEIGHT);
             screen.add(listEntryWidget, removeButton);
         }
-        final MutableComponent addButtonText = Component.translatable("cosycritters.addNew");
+        final MutableComponent addButtonText = Component.translatable("clobbered.addNew");
         final AbstractWidget addButton = Widgets.getButton(addButtonText, (bttn) -> {
             Object newListEntry = getNewValue(listEntryType);
             Object defaultEntry = getNewValue(listEntryType);
@@ -361,5 +363,24 @@ public class Widgets {
                 throw new RuntimeException(e);
             }
         }
+    }
+
+    private static void addMapOptions(ConfigScreen screen, Map<Object,Object> map) {
+        if (map.isEmpty()) {
+            screen.add(getLabel(Component.translatable("mco.configure.world.slot.empty")));
+        }
+        map.forEach((initialKey, initialValue) -> {
+            screen.add(new MapEntryWidget(screen, map, initialKey, initialValue));
+        });
+        final MutableComponent addButtonText = Component.translatable("clobbered.addNew");
+        final AbstractWidget addButton = Widgets.getButton(addButtonText, (bttn) -> {
+            WidgetList.Row thisButton = screen.list.children().get(screen.list.children().size() - 1);
+            WidgetList.Row firstRow = screen.list.children().get(0);
+            if (firstRow.children().get(0) instanceof LabelWidget) screen.list.remove(firstRow);
+            screen.list.remove(thisButton);
+            screen.add(new MapEntryWidget(screen, map));
+            screen.add(thisButton);
+        });
+        screen.add(addButton);
     }
 }

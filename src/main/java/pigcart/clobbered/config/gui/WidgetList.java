@@ -23,6 +23,12 @@ public class WidgetList extends ContainerObjectSelectionList<WidgetList.Row> {
     public void add(AbstractWidget... widgets) {
         this.addEntry(new Row(widgets));
     }
+    public void add(Row row) {
+        this.addEntry(row);
+    }
+    public void remove(Row row) {
+        this.removeEntry(row);
+    }
 
     public int getRowWidth() {
         return 310;
@@ -34,8 +40,8 @@ public class WidgetList extends ContainerObjectSelectionList<WidgetList.Row> {
     }
     *///?}
 
-    protected static class Row extends Entry<Row> {
-        private final List<AbstractWidget> widgets;
+    public static class Row extends Entry<Row> {
+        List<AbstractWidget> widgets;
 
         Row(AbstractWidget... widgets) {
             this.widgets = ImmutableList.copyOf(widgets);

@@ -6,8 +6,6 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.ItemPickupParticle;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.core.particles.ItemParticleOption;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializer;
@@ -184,26 +182,21 @@ public class LobbedItem extends AbstractArrow {
             if (item.is(Clobbered.EXPLODES)) {
                 level().explode(this, this.getX(), this.getY(), this.getZ(), 1.0F, Level.ExplosionInteraction.MOB);
                 this.discard();
-            } else if (config.itemBreakChance > random.nextFloat()) {
-                boolean dropBrokenItem = true;
-                if (item.isDamageableItem()) {
-                    if (item.nextDamageWillBreak()) {
-                        level().playSound(null, blockPosition(), SoundEvents.ITEM_BREAK.value(), SoundSource.PLAYERS);
-                        this.discard();
-                    } else {
-                        item.setDamageValue(getPickupItem().getDamageValue() + 1);
-                        setPickupItemStack(item);
-                        dropBrokenItem = false;
-                    }
+            } else if (item.isDamageableItem()) {
+                if (item.nextDamageWillBreak()) {
+                    level().playSound(null, blockPosition(), SoundEvents.ITEM_BREAK.value(), SoundSource.PLAYERS);
+                    this.discard();
+                } else {
+                    item.setDamageValue(getPickupItem().getDamageValue() + 1);
+                    setPickupItemStack(item);
                 }
-                if (dropBrokenItem) {
-                    Item brokenItem = config.brokenItems.get(item.getItem());
-                    if (brokenItem != null) {
-                        ItemStack brokenStack = brokenItem.getDefaultInstance();
-                        brokenStack.setCount(item.getCount());
-                        setPickupItemStack(brokenStack);
-                        level().playSound(null, blockPosition(), SoundEvents.ITEM_BREAK.value(), SoundSource.PLAYERS);
-                    }
+            } else if (config.itemBreakChance > random.nextFloat()) {
+                Item brokenItem = config.brokenItems.get(item.getItem());
+                if (brokenItem != null) {
+                    ItemStack brokenStack = brokenItem.getDefaultInstance();
+                    brokenStack.setCount(item.getCount());
+                    setPickupItemStack(brokenStack);
+                    level().playSound(null, blockPosition(), SoundEvents.ITEM_BREAK.value(), SoundSource.PLAYERS);
                 }
             }
         }
@@ -271,7 +264,6 @@ public class LobbedItem extends AbstractArrow {
                             .lookupOrThrow(Registries.DAMAGE_TYPE)
                             .get(Clobbered.DAMAGE_TYPE.identifier()).orElseThrow()
             );
-            System.out.println(damageSource.is(DamageTypeTags.IS_PROJECTILE));
             if (canDamage) hurt(entity, damageSource, damage);
             if (entity.is(Clobbered.STICKY)) {
                 impaleEntity(entity, hitPos, this.getRotationVector());

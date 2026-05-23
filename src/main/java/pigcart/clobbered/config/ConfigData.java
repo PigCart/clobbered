@@ -3,6 +3,7 @@ package pigcart.clobbered.config;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import pigcart.clobbered.config.gui.Annotations.*;
+import pigcart.clobbered.config.gui.ConfigResponders.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,6 +20,7 @@ public class ConfigData {
     public boolean automaticItemPickUp = false;
     public boolean automaticArrowPickUp = false;
 
+    @Slider @Format(Percent.class)
     public float itemBreakChance = 0.1F;
     public Map<Item, Item> brokenItems = new HashMap<>(Map.ofEntries(
             Map.entry(Items.STONE_BRICKS, Items.CRACKED_STONE_BRICKS),

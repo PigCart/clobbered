@@ -1,5 +1,6 @@
 package pigcart.clobbered.config.gui;
 
+import com.google.common.reflect.TypeToken;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.StringWidget;
@@ -8,6 +9,7 @@ import net.minecraft.client.gui.layouts.HeaderAndFooterLayout;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.Item;
 import pigcart.clobbered.Clobbered;
 import pigcart.clobbered.config.ConfigManager;
 //? <=1.20.1 {
@@ -15,6 +17,8 @@ import pigcart.clobbered.config.ConfigManager;
 *///?}
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
+import java.util.Map;
 
 public class ConfigScreen extends Screen {
     final Object config;
@@ -81,12 +85,17 @@ public class ConfigScreen extends Screen {
                 Component.translatable("controls.reset").append(" ").append(this.title),
                 (button) -> {
                     Clobbered.LOGGER.info("Reset config");
-                    for (Field field : this.config.getClass().getFields()) {
-                        try {
-                            field.setAccessible(true);
-                            field.set(config, field.get(configDefault));
-                        } catch (IllegalAccessException e) {
-                            throw new RuntimeException(e);
+                    if (config instanceof Map conf) {
+                        conf.clear();
+                        conf.putAll((Map) configDefault);
+                    } else {
+                        for (Field field : this.config.getClass().getFields()) {
+                            try {
+                                field.setAccessible(true);
+                                field.set(config, field.get(configDefault));
+                            } catch (IllegalAccessException e) {
+                                throw new RuntimeException(e);
+                            }
                         }
                     }
                     refresh();
@@ -150,5 +159,11 @@ public class ConfigScreen extends Screen {
             widget.setX((width / 2 - 155) + ((AbstractWidgetAccess)widget).pigcart$getOffset());
         }
         list.add(widgets);
+    }
+    public void add(WidgetList.Row row) {
+        for (AbstractWidget widget : row.widgets) {
+            widget.setX((width / 2 - 155) + ((AbstractWidgetAccess)widget).pigcart$getOffset());
+        }
+        list.add(row);
     }
 }
