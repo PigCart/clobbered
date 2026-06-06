@@ -35,7 +35,7 @@ public class Clobbered {
     public static EntityType<LobbedItem> LOBBED_ITEM = EntityType.Builder.<LobbedItem>of(LobbedItem::new, MobCategory.MISC)
             .clientTrackingRange(64)
             .sized(0.25f, 0.25f)
-            .updateInterval(3)
+            .updateInterval(10)
             .noLootTable()
             .noSummon()
             .build(ResourceKey.create(Registries.ENTITY_TYPE, LOBBED_ITEM_ID));

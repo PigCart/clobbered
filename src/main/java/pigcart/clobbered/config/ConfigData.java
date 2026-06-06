@@ -10,15 +10,23 @@ import java.util.Map;
 
 
 public class ConfigData {
-    @NoGUI public byte configVersion = 0;
+    @NoGUI public byte configVersion = 1;
 
     public int minimumDropStrength = 8;
-    public int maximumDropStrength = 20;
+    public int maximumDropStrength = 32;
     public boolean showStrengthBar = true;
-    public float interactionRadius = 0.3F;
+    public float interactionRadius = 0.2F;
     public float damageScalingPower = 0.2F;
-    public boolean automaticItemPickUp = false;
-    public boolean automaticArrowPickUp = false;
+
+    public PickUpMethod itemPickUp = PickUpMethod.INTERACT;
+    @BooleanFormat(t = "PickUpMethod.INTERACT", f="PickUpMethod.AUTO")
+    public boolean manualArrowPickUp = true;
+    public boolean pickUpMobArrows = true;
+    public enum PickUpMethod {
+        MOB_DEATH,
+        INTERACT,
+        AUTO
+    }
 
     @Slider @Format(Percent.class)
     public float itemBreakChance = 0.1F;

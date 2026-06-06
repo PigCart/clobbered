@@ -14,7 +14,6 @@ import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
@@ -22,6 +21,7 @@ import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.ProjectileDeflection;
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
@@ -35,6 +35,8 @@ import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.*;
 import org.joml.Vector3f;
 import org.joml.Vector3fc;
+import org.jspecify.annotations.Nullable;
+import pigcart.clobbered.config.ConfigData;
 import pigcart.clobbered.mixin.PlayerAccessor;
 
 import static pigcart.clobbered.config.ConfigManager.config;
@@ -128,8 +130,8 @@ public class LobbedItem extends AbstractArrow {
 
     @Override
     protected boolean tryPickup(Player player) {
-        if (config.automaticItemPickUp) {
-            return super.tryPickup(player);
+        if (config.itemPickUp == ConfigData.PickUpMethod.AUTO) {
+            return player.getInventory().add(this.getPickupItem());
         } else {
             return false;
         }
@@ -309,7 +311,8 @@ public class LobbedItem extends AbstractArrow {
 
     @Override
     public boolean isPickable() {
-        return true; // allows to be picked in raycasts, enabling interaction
+        return config.itemPickUp == ConfigData.PickUpMethod.INTERACT
+            || (config.itemPickUp == ConfigData.PickUpMethod.MOB_DEATH && !isInEntity());
     }
 
     @Override
@@ -336,6 +339,17 @@ public class LobbedItem extends AbstractArrow {
     @Override
     public boolean isAttackable() {
         return true;
+    }
+
+
+    @Override
+    public boolean skipAttackInteraction(Entity source) {
+        return true;
+    }
+
+    @Override
+    public boolean deflect(ProjectileDeflection deflection, @Nullable Entity deflectingEntity, @Nullable EntityReference<Entity> newOwner, boolean byAttack) {
+        return super.deflect(deflection, deflectingEntity, newOwner, byAttack);
     }
 
     @Override
