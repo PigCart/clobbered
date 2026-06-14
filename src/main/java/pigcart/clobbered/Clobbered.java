@@ -14,6 +14,8 @@ import org.slf4j.LoggerFactory;
 import pigcart.clobbered.config.ConfigManager;
 import pigcart.clobbered.networking.LobItemServerboundPayload;
 
+import static pigcart.clobbered.config.ConfigManager.config;
+
 public class Clobbered {
 
     public static final String MOD_ID = "clobbered";

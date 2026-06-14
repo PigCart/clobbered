@@ -5,6 +5,7 @@ import net.minecraft.world.item.Items;
 import pigcart.clobbered.config.gui.Annotations.*;
 import pigcart.clobbered.config.gui.ConfigResponders.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -53,4 +54,6 @@ public class ConfigData {
             Map.entry(Items.POLISHED_DEEPSLATE, Items.DEEPSLATE),
             Map.entry(Items.POLISHED_TUFF, Items.TUFF)
     ));
+
+    public ArrayList<String> playerWhitelist = new ArrayList<>();
 }

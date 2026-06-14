@@ -49,7 +49,10 @@ public abstract class ServerPlayerMixin implements PlayerDropExtension {
             itemStack.use(level, player, InteractionHand.MAIN_HAND);
             return null;
         }
-        if (itemStack.isEmpty() || itemStack.is(Clobbered.BLACKLISTED)) {
+        if (itemStack.isEmpty()
+                || itemStack.is(Clobbered.BLACKLISTED)
+                || (!config.playerWhitelist.isEmpty() && !config.playerWhitelist.contains(player.getPlainTextName()))
+        ) {
             return original.call(player, itemStack, randomly, thrownFromHand);
         }
         if (thrownFromHand) {

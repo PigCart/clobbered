@@ -38,4 +38,4 @@ Throw items with force! Clobber mobs and players by lobbing things at them.
   - ✔ automatic (like vanilla)
   - ✔ interaction - must retrieve by interacting with the item (default right click)
   - ✔ mob death - retrieve with interaction except mobs, who have to be killed to drop the item
-- Whitelist/blacklist for players who are allowed to throw
+- ✔ Whitelist for players who are allowed to throw
