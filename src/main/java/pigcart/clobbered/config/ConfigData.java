@@ -55,5 +55,8 @@ public class ConfigData {
             Map.entry(Items.POLISHED_TUFF, Items.TUFF)
     ));
 
+    public boolean useWhitelist = false;
     public ArrayList<String> playerWhitelist = new ArrayList<>();
+    public boolean useBlacklist = false;
+    public ArrayList<String> playerBlacklist = new ArrayList<>();
 }

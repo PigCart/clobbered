@@ -31,7 +31,7 @@ Throw items with force! Clobber mobs and players by lobbing things at them.
 - ✔ Blocks can become cracked or broken on impact (eg: stone → cobblestone, anvil → damaged anvil)
 
 ## Misc
-- Shot arrows can be picked up the same way as stuck items.
+- ✔ Shot arrows can be picked up the same way as stuck items.
 - Boomerang item. Uses the boomerang tag mechanic. Can take trident enchants (e.g: loyalty)
 - 'Kick' button that imparts a force on nearby items
 - ✔ Stuck item retrieval config

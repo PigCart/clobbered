@@ -51,7 +51,8 @@ public abstract class ServerPlayerMixin implements PlayerDropExtension {
         }
         if (itemStack.isEmpty()
                 || itemStack.is(Clobbered.BLACKLISTED)
-                || (!config.playerWhitelist.isEmpty() && !config.playerWhitelist.contains(player.getPlainTextName()))
+                || (config.useWhitelist && !config.playerWhitelist.contains(player.getPlainTextName()))
+                || (config.useBlacklist && config.playerBlacklist.contains(player.getPlainTextName()))
         ) {
             return original.call(player, itemStack, randomly, thrownFromHand);
         }
