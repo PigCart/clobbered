@@ -12,6 +12,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import pigcart.clobbered.*;
+import pigcart.clobbered.networking.KickServerboundPayload;
 import pigcart.clobbered.networking.LobItemServerboundPayload;
 
 import java.util.function.Function;
@@ -37,8 +38,10 @@ public class FabricEntrypoint implements ModInitializer {
         });
 
         PayloadTypeRegistry.serverboundPlay().register(LobItemServerboundPayload.TYPE, LobItemServerboundPayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(KickServerboundPayload.TYPE, KickServerboundPayload.CODEC);
 
         ServerPlayNetworking.registerGlobalReceiver(LobItemServerboundPayload.TYPE, Clobbered::handleLobItem);
+        ServerPlayNetworking.registerGlobalReceiver(KickServerboundPayload.TYPE, Clobbered::handleKick);
 
         Registry.register(BuiltInRegistries.ENTITY_TYPE, Clobbered.LOBBED_ITEM_ID, Clobbered.LOBBED_ITEM);
 

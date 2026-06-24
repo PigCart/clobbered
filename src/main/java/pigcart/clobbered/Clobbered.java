@@ -2,17 +2,25 @@ package pigcart.clobbered;
 
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.gizmos.Gizmos;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.damagesource.DamageType;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.*;
+import net.minecraft.world.phys.shapes.CollisionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pigcart.clobbered.config.ConfigManager;
+import pigcart.clobbered.networking.KickServerboundPayload;
 import pigcart.clobbered.networking.LobItemServerboundPayload;
+
+import java.util.List;
 
 import static pigcart.clobbered.config.ConfigManager.config;
 
@@ -62,5 +70,18 @@ public class Clobbered {
         int strength = payload.strength();
         ((PlayerDropExtension) ctx.player()).clobbered$setLobStrength(strength);
         ctx.player().drop(payload.lobAll());
+    }
+
+    public static void handleKick(KickServerboundPayload payload, ServerPlayNetworking.Context ctx) {
+        Vec3 forward = ctx.player().getForward();
+        Vec3 position = ctx.player().position();
+        Vec3 kickPos = position.add(forward.x * 2, 0, forward.z * 2);
+        final List<Entity> kicked = ctx.player().level().getEntitiesOfClass(Entity.class,
+                AABB.ofSize(kickPos, 1, 1, 1)
+        );
+        for (Entity entity : kicked) {
+            if (entity instanceof LobbedItem lobbedItem && lobbedItem.isImpaling()) continue;
+            entity.addDeltaMovement(new Vec3(forward.x, 0.1, forward.z));
+        }
     }
 }
