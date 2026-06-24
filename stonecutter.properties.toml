@@ -1,6 +1,6 @@
 mod.id = "clobbered"
 mod.name = "Clobbered"
-mod.version = "0.2.2"
+mod.version = "0.3.0"
 mod.description = "Clobber mobs by throwing items at them"
 mod.author = "pigcart"
 mod.sources = "https://github.com/PigCart/clobbered"

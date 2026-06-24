@@ -30,6 +30,7 @@ public class Clobbered {
     public static final TagKey<Item> BLACKLISTED = itemTag("blacklisted");
     public static final TagKey<Item> EXPLODES = itemTag("explodes");
     public static final TagKey<Item> CONSUMED = itemTag("consumed");
+    public static final TagKey<Item> BOOMERANG = itemTag("boomerang");
 
     public static final TagKey<EntityType<?>> STICKY = entityTag("sticky");
 
@@ -37,10 +38,12 @@ public class Clobbered {
     public static EntityType<LobbedItem> LOBBED_ITEM = EntityType.Builder.<LobbedItem>of(LobbedItem::new, MobCategory.MISC)
             .clientTrackingRange(64)
             .sized(0.25f, 0.25f)
-            .updateInterval(10)
+            .updateInterval(2)
             .noLootTable()
             .noSummon()
             .build(ResourceKey.create(Registries.ENTITY_TYPE, LOBBED_ITEM_ID));
+
+    public static Item BOOMERANG_ITEM;
 
     ///  sets up features that dont require a specific modloader
     public static void onInitialize() {

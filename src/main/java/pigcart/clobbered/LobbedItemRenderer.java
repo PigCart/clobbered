@@ -35,6 +35,7 @@ public class LobbedItemRenderer extends EntityRenderer<LobbedItem, LobbedItemRen
 
     @Override
     public void extractRenderState(LobbedItem lobbedItem, LobbedItemRenderState state, float partialTicks) {
+        state.useBoomerangRotation = lobbedItem.isBoomerang() && !lobbedItem.isImpaling() && lobbedItem.isHurled();
         state.animOffset = this.animOffset;
         state.useEntityRotation = lobbedItem.isHurled() || lobbedItem.isImpaling();
         if (lobbedItem.isInEntity()) { // rotate with the entity and position accordingly
@@ -63,7 +64,10 @@ public class LobbedItemRenderer extends EntityRenderer<LobbedItem, LobbedItemRen
         if (!state.item.isEmpty()) {
             poseStack.pushPose();
             AABB boundingBox = state.item.getModelBoundingBox();
-            if (state.useEntityRotation) {
+            if (state.useBoomerangRotation) {
+                poseStack.mulPose(Axis.ZP.rotationDegrees(90));
+                poseStack.mulPose(Axis.XP.rotation(state.ageInTicks));
+            } else if (state.useEntityRotation) {
                 float scale = -0.4F;
                 Vec3 off = Vec3.directionFromRotation(state.xRot, state.yRot).multiply(scale, scale, scale);
                 poseStack.translate(off.add(0, 0.1, 0));
@@ -88,5 +92,6 @@ public class LobbedItemRenderer extends EntityRenderer<LobbedItem, LobbedItemRen
         boolean useEntityRotation;
         public float xRot;
         public float yRot;
+        public boolean useBoomerangRotation;
     }
 }

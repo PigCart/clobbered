@@ -5,6 +5,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.ItemPickupParticle;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -45,12 +46,15 @@ public class LobbedItem extends AbstractArrow {
 
     public Entity impaledEntity;
     public int timesSkippedOnWater = 0;
+    public boolean boomerangReturning = false;
+    public Vec3 boomerangReturnPos;
 
     public static final EntityDataAccessor<Integer> IMPALED_ENTITY = defineData(EntityDataSerializers.INT);
     public static final EntityDataAccessor<Vector3fc> IMPALE_OFFSET = defineData(EntityDataSerializers.VECTOR3);
     public static final EntityDataAccessor<Float> IMPALE_ROT_X = defineData(EntityDataSerializers.FLOAT);
     public static final EntityDataAccessor<Float> IMPALE_ROT_Y = defineData(EntityDataSerializers.FLOAT);
     public static final EntityDataAccessor<Boolean> HURLED = defineData(EntityDataSerializers.BOOLEAN);
+    public static final EntityDataAccessor<Boolean> BOOMERANG = defineData(EntityDataSerializers.BOOLEAN);
     public static final EntityDataAccessor<ItemStack> RENDERED_ITEM = defineData(EntityDataSerializers.ITEM_STACK);
 
     private static <T> EntityDataAccessor<T> defineData(EntityDataSerializer<T> type) {
@@ -63,6 +67,7 @@ public class LobbedItem extends AbstractArrow {
         builder.define(IMPALED_ENTITY, -1);
         builder.define(IMPALE_OFFSET, new Vector3f());
         builder.define(HURLED, false);
+        builder.define(BOOMERANG, false);
         builder.define(IMPALE_ROT_X, 0F);
         builder.define(IMPALE_ROT_Y, 0F);
         builder.define(RENDERED_ITEM, getDefaultPickupItem());
@@ -110,6 +115,8 @@ public class LobbedItem extends AbstractArrow {
     public Vec3 getImpaleOffset() { return new Vec3(entityData.get(IMPALE_OFFSET)); }
     public boolean isHurled() { return this.entityData.get(HURLED); }
     public void setHurled(boolean value) { this.entityData.set(HURLED, value); }
+    public boolean isBoomerang() { return this.entityData.get(BOOMERANG); }
+    public void setBoomerang(boolean value) { this.entityData.set(BOOMERANG, value); }
 
     public LobbedItem(EntityType<LobbedItem> type, Level level) { super(type, level); }
     public LobbedItem(Level level, double x, double y, double z, Vec3 velocity, boolean hurled, ItemStack itemStack, Entity owner) {
@@ -120,6 +127,10 @@ public class LobbedItem extends AbstractArrow {
         setHurled(hurled);
         this.setOwner(owner);
         this.setSoundEvent(SoundEvents.EMPTY);
+        setBoomerang(itemStack.is(Clobbered.BOOMERANG));
+        this.boomerangReturning = isBoomerang();
+        this.boomerangReturnPos = new Vec3(x, y, z);
+        if (boomerangReturning && hurled) this.setNoGravity(true);
     }
 
     @Override
@@ -150,6 +161,17 @@ public class LobbedItem extends AbstractArrow {
             Vec2 rot = this.getDeltaMovement().rotation();
             this.setYRot(rot.y);
             this.setXRot(rot.x);
+            if (boomerangReturning) {
+                int loyalty = 1;
+                Vec3 vec = boomerangReturnPos.subtract(this.position());
+                this.setPosRaw(this.getX(), this.getY() + vec.y * 0.015 * loyalty, this.getZ());
+                double accel = 0.05 * loyalty;
+                this.setDeltaMovement(this.getDeltaMovement().scale(0.95).add(vec.normalize().scale(accel)));
+                if (this.blockPosition().equals(BlockPos.containing(boomerangReturnPos))) {
+                    boomerangReturning = false;
+                    this.setNoGravity(false);
+                }
+            }
         }
         if (this.level().isClientSide()) return;
         if (isInEntity()) {

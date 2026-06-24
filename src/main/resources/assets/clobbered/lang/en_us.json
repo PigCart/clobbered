@@ -20,6 +20,8 @@
   "clobbered.playerBlacklist": "Blacklisted players",
   "clobbered.addNew": "Add new",
 
+  "item.clobbered.boomerang": "Boomerang",
+
   "death.attack.clobber": "%s was clobbered by a dropped item",
   "death.attack.clobber.item": "%2$s clobbered %1$s with a dropped item",
   "death.attack.clobber.player": "%2$s clobbered %1$s with a dropped item"
