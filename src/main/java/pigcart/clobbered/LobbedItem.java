@@ -8,6 +8,8 @@ import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.gizmos.GizmoStyle;
+import net.minecraft.gizmos.Gizmos;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializer;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -173,7 +175,16 @@ public class LobbedItem extends AbstractArrow {
                 }
             }
         }
-        if (this.level().isClientSide()) return;
+        if (this.level().isClientSide()) {
+            // attempt to re attach to entity after it becomes unloaded
+            if (impaledEntity != null
+                    && impaledEntity.isRemoved()
+                    && impaledEntity.getRemovalReason() == RemovalReason.DISCARDED
+            ) {
+                impaledEntity = level().getEntity(impaledEntity.getUUID());
+            }
+            return;
+        }
         if (isInEntity()) {
 
             float impaledBodyRot = impaledEntity.getYRot();
@@ -320,15 +331,20 @@ public class LobbedItem extends AbstractArrow {
 
     public void impaleEntity(Entity entity, Vec3 impalePos, Vec2 impaleRotation) {
         this.impaledEntity = entity;
-        Vec3 localImpalePos = impalePos.subtract(entity.position());
-        Vec3 impaleOffset = Vec3.applyLocalCoordinatesToRotation(new Vec2(0, -entity.getYRot()), localImpalePos);
+        setImpaleOffset(impalePos);
         setDeltaMovement(Vec3.ZERO);
         this.setNoPhysics(true);
+        this.setNoGravity(true);
         this.entityData.set(IMPALED_ENTITY, entity.getId());
-        this.entityData.set(IMPALE_OFFSET, impaleOffset.toVector3f());
         this.entityData.set(IMPALE_ROT_X, impaleRotation.x);
         this.entityData.set(IMPALE_ROT_Y, impaleRotation.y - entity.getYRot());
         if (entity instanceof Mob mob) mob.setPersistenceRequired();
+    }
+
+    public void setImpaleOffset(Vec3 impalePos) {
+        Vec3 localImpalePos = impalePos.subtract(impaledEntity.position());
+        Vec3 impaleOffset = Vec3.applyLocalCoordinatesToRotation(new Vec2(0, -impaledEntity.getYRot()), localImpalePos);
+        this.entityData.set(IMPALE_OFFSET, impaleOffset.toVector3f());
     }
 
     @Override
@@ -377,5 +393,13 @@ public class LobbedItem extends AbstractArrow {
     @Override
     protected void tickDespawn() {
         // dont
+    }
+
+    @Override
+    public void setPos(double x, double y, double z) {
+        if (this.isInEntity()) {
+            //setImpaleOffset(new Vec3(x, y, z));
+        }
+        super.setPos(x, y, z);
     }
 }

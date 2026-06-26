@@ -34,9 +34,9 @@ Throw items with force! Clobber mobs and players by lobbing things at them.
 - ✔ Shot arrows can be picked up the same way as stuck items.
 - ✔ Boomerang item. Uses the boomerang tag mechanic.
   - Can take trident enchants (e.g: loyalty)
-- 'Kick' button that imparts a force on nearby items
+- ✔ 'Kick' button that imparts a force on nearby entities
 - ✔ Stuck item retrieval config
   - ✔ automatic (like vanilla)
   - ✔ interaction - must retrieve by interacting with the item (default right click)
   - ✔ mob death - retrieve with interaction except mobs, who have to be killed to drop the item
-- ✔ Whitelist for players who are allowed to throw
+- ✔ Whitelist & Blacklist for players who are allowed to throw

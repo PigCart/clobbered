@@ -35,6 +35,7 @@ public class LobbedItemRenderer extends EntityRenderer<LobbedItem, LobbedItemRen
 
     @Override
     public void extractRenderState(LobbedItem lobbedItem, LobbedItemRenderState state, float partialTicks) {
+        super.extractRenderState(lobbedItem, state, partialTicks);
         state.useBoomerangRotation = lobbedItem.isBoomerang() && !lobbedItem.isImpaling() && lobbedItem.isHurled();
         state.animOffset = this.animOffset;
         state.useEntityRotation = lobbedItem.isHurled() || lobbedItem.isImpaling();
@@ -43,12 +44,14 @@ public class LobbedItemRenderer extends EntityRenderer<LobbedItem, LobbedItemRen
             float impaledBodyRot = lobbedItem.impaledEntity.getPreciseBodyRotation(partialTicks);
             state.yRot = impaledBodyRot + lobbedItem.getEntityData().get(LobbedItem.IMPALE_ROT_Y);
             Vec3 offset = Vec3.applyLocalCoordinatesToRotation(new Vec2(0, impaledBodyRot), lobbedItem.getImpaleOffset());
-            lobbedItem.setPos(lobbedItem.impaledEntity.position().add(offset));
+            //lobbedItem.setPos(lobbedItem.impaledEntity.position().add(offset));
+            state.x = Mth.lerp(partialTicks, lobbedItem.impaledEntity.xOld + offset.x, lobbedItem.impaledEntity.getX() + offset.x);
+            state.y = Mth.lerp(partialTicks, lobbedItem.impaledEntity.yOld + offset.y, lobbedItem.impaledEntity.getY() + offset.y);
+            state.z = Mth.lerp(partialTicks, lobbedItem.impaledEntity.zOld + offset.z, lobbedItem.impaledEntity.getZ() + offset.z);
         } else {
             state.xRot = lobbedItem.getXRot(partialTicks); // pitch
             state.yRot = lobbedItem.getYRot(partialTicks); // yaw
         }
-        super.extractRenderState(lobbedItem, state, partialTicks);
         state.extractItemGroupRenderState(lobbedItem, lobbedItem.getRenderItemStack(), this.itemModelResolver);
         // use held item model instead of dropped item model
         if (lobbedItem.isHurled()) itemModelResolver.updateForTopItem(state.item,
