@@ -2,6 +2,11 @@
   "values": [
     "minecraft:snowball",
     "minecraft:egg",
-    "minecraft:ender_pearl"
+    "minecraft:ender_pearl",
+    "minecraft:lingering_potion",
+    "minecraft:splash_potion",
+    "minecraft:wind_charge",
+    "minecraft:experience_bottle",
+    "minecraft:ender_eye"
   ]
 }
