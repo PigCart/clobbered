@@ -1,11 +1,11 @@
 mod.id = "clobbered"
 mod.name = "Clobbered"
-mod.version = "0.4.1"
+mod.version = "0.4.2"
 mod.description = "Clobber mobs by throwing items at them"
 mod.author = "pigcart"
 mod.sources = "https://github.com/PigCart/clobbered"
 mod.issues = "https://github.com/PigCart/clobbered/issues?q=is%3Aissue"
-mod.homepage = "https://modrinth.com/mod/clobbered"
+mod.homepage = ""
 mod.license = "MIT"
 mod.icon = "assets/clobbered/icon.png"
 

@@ -11,6 +11,7 @@ import net.minecraft.client.renderer.item.ItemModelResolver;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.phys.AABB;
@@ -40,14 +41,14 @@ public class LobbedItemRenderer extends EntityRenderer<LobbedItem, LobbedItemRen
         state.animOffset = this.animOffset;
         state.useEntityRotation = lobbedItem.isHurled() || lobbedItem.isImpaling();
         if (lobbedItem.isInEntity()) { // rotate with the entity and position accordingly
+            Entity inEntity = lobbedItem.getInEntity();
             state.xRot = lobbedItem.getEntityData().get(LobbedItem.IMPALE_ROT_X);
-            float impaledBodyRot = lobbedItem.impaledEntity.getPreciseBodyRotation(partialTicks);
+            float impaledBodyRot = inEntity.getPreciseBodyRotation(partialTicks);
             state.yRot = impaledBodyRot + lobbedItem.getEntityData().get(LobbedItem.IMPALE_ROT_Y);
             Vec3 offset = Vec3.applyLocalCoordinatesToRotation(new Vec2(0, impaledBodyRot), lobbedItem.getImpaleOffset());
-            //lobbedItem.setPos(lobbedItem.impaledEntity.position().add(offset));
-            state.x = Mth.lerp(partialTicks, lobbedItem.impaledEntity.xOld + offset.x, lobbedItem.impaledEntity.getX() + offset.x);
-            state.y = Mth.lerp(partialTicks, lobbedItem.impaledEntity.yOld + offset.y, lobbedItem.impaledEntity.getY() + offset.y);
-            state.z = Mth.lerp(partialTicks, lobbedItem.impaledEntity.zOld + offset.z, lobbedItem.impaledEntity.getZ() + offset.z);
+            state.x = Mth.lerp(partialTicks, inEntity.xOld + offset.x, inEntity.getX() + offset.x);
+            state.y = Mth.lerp(partialTicks, inEntity.yOld + offset.y, inEntity.getY() + offset.y);
+            state.z = Mth.lerp(partialTicks, inEntity.zOld + offset.z, inEntity.getZ() + offset.z);
         } else {
             state.xRot = lobbedItem.getXRot(partialTicks); // pitch
             state.yRot = lobbedItem.getYRot(partialTicks); // yaw

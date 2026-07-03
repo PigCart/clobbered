@@ -42,16 +42,20 @@ import org.jspecify.annotations.Nullable;
 import pigcart.clobbered.config.ConfigData;
 import pigcart.clobbered.mixin.PlayerAccessor;
 
+import java.util.Optional;
+import java.util.UUID;
+
 import static pigcart.clobbered.config.ConfigManager.config;
 
 public class LobbedItem extends AbstractArrow {
 
     public Entity impaledEntity;
+    public UUID impaledEntityUUID;
     public int timesSkippedOnWater = 0;
     public boolean boomerangReturning = false;
     public Vec3 boomerangReturnPos;
 
-    public static final EntityDataAccessor<Integer> IMPALED_ENTITY = defineData(EntityDataSerializers.INT);
+    public static final EntityDataAccessor<String> IMPALED_ENTITY = defineData(EntityDataSerializers.STRING);
     public static final EntityDataAccessor<Vector3fc> IMPALE_OFFSET = defineData(EntityDataSerializers.VECTOR3);
     public static final EntityDataAccessor<Float> IMPALE_ROT_X = defineData(EntityDataSerializers.FLOAT);
     public static final EntityDataAccessor<Float> IMPALE_ROT_Y = defineData(EntityDataSerializers.FLOAT);
@@ -66,7 +70,7 @@ public class LobbedItem extends AbstractArrow {
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         super.defineSynchedData(builder);
-        builder.define(IMPALED_ENTITY, -1);
+        builder.define(IMPALED_ENTITY, "");
         builder.define(IMPALE_OFFSET, new Vector3f());
         builder.define(HURLED, false);
         builder.define(BOOMERANG, false);
@@ -78,33 +82,44 @@ public class LobbedItem extends AbstractArrow {
     @Override
     public void onSyncedDataUpdated(EntityDataAccessor<?> accessor) {
         super.onSyncedDataUpdated(accessor);
-        impaledEntity = level().getEntity(entityData.get(IMPALED_ENTITY));
+        final String stringUUID = entityData.get(IMPALED_ENTITY);
+        if (stringUUID.isEmpty()) {
+            impaledEntityUUID = null;
+            impaledEntity = null;
+        } else {
+            impaledEntityUUID = UUID.fromString(stringUUID);
+            impaledEntity = level().getEntity(impaledEntityUUID);
+        }
     }
 
     @Override
     protected void addAdditionalSaveData(final ValueOutput output) {
         super.addAdditionalSaveData(output);
         output.store("Hurled", Codec.BOOL, isHurled());
-        /*output.store("InEntity", Codec.STRING, level().getEntity(entityData.get(IMPALED_ENTITY)).getStringUUID());
-        System.out.println("saving entity id " + entityData.get(IMPALED_ENTITY));
-
-         */
+        output.store("InEntity", Codec.STRING, impaledEntity == null ? "" : impaledEntity.getStringUUID());
+        output.store("impaleRotY", Codec.FLOAT, entityData.get(IMPALE_ROT_Y));
+        output.store("impaleRotX", Codec.FLOAT, entityData.get(IMPALE_ROT_X));
+        Vector3fc impaleOff = entityData.get(IMPALE_OFFSET);
+        output.store("impaleOffX", Codec.FLOAT, impaleOff.x());
+        output.store("impaleOffY", Codec.FLOAT, impaleOff.y());
+        output.store("impaleOffZ", Codec.FLOAT, impaleOff.z());
     }
 
     @Override
     protected void readAdditionalSaveData(final ValueInput input) {
         super.readAdditionalSaveData(input);
         setHurled(input.read("Hurled", Codec.BOOL).orElse(false));
-        /*entityData.set(IMPALED_ENTITY, level().getEntity(
-                UUID.fromString(input.read("InEntity", Codec.STRING).orElse(""))
-        ).getId());
-        if (isInEntity()) {
-            impaledEntity = level().getEntity(entityData.get(IMPALED_ENTITY));
-            System.out.println("impaled entity is " + impaledEntity + " with id " + entityData.get(IMPALED_ENTITY));
-            if (impaledEntity == null) {
-                entityData.set(IMPALED_ENTITY, -1);
-            }
-        }*/
+        entityData.set(IMPALE_OFFSET, new Vector3f(
+                input.read("impaleOffX", Codec.FLOAT).orElse(0F),
+                input.read("impaleOffY", Codec.FLOAT).orElse(0F),
+                input.read("impaleOffZ", Codec.FLOAT).orElse(0F)
+        ));
+        entityData.set(IMPALE_ROT_X, input.read("impaleRotX", Codec.FLOAT).orElse(0F));
+        entityData.set(IMPALE_ROT_Y, input.read("impaleRotY", Codec.FLOAT).orElse(0F));
+        final String stringUUID = input.read("InEntity", Codec.STRING).orElse("");
+        if (!stringUUID.isEmpty()) impaledEntityUUID = UUID.fromString(stringUUID);
+        entityData.set(IMPALED_ENTITY, stringUUID);
+        // level does not contain entities at this point, entity will be gotten when first queried
     }
 
     @Override
@@ -113,8 +128,23 @@ public class LobbedItem extends AbstractArrow {
     }
     public ItemStack getRenderItemStack() { return this.entityData.get(RENDERED_ITEM); }
     public boolean isImpaling() { return isInGround() || isInEntity(); }
-    public boolean isInEntity() { return this.entityData.get(IMPALED_ENTITY) != -1; }
+    public boolean isInEntity() { return impaledEntityUUID != null; }
+    public void setInEntity(Entity entity) {
+        impaledEntity = entity;
+        impaledEntityUUID = entity.getUUID();
+        entityData.set(IMPALED_ENTITY, entity.getStringUUID());
+    }
+    public Entity getInEntity() {
+        // fetch entity from level if we've just loaded in
+        if (impaledEntity == null) impaledEntity = level().getEntity(impaledEntityUUID);
+        return impaledEntity;
+    }
     public Vec3 getImpaleOffset() { return new Vec3(entityData.get(IMPALE_OFFSET)); }
+    public void setImpaleOffset(Vec3 impalePos, Vec3 entityPos, float entityRot) {
+        Vec3 localImpalePos = impalePos.subtract(entityPos);
+        Vec3 impaleOffset = Vec3.applyLocalCoordinatesToRotation(new Vec2(0, -entityRot), localImpalePos);
+        this.entityData.set(IMPALE_OFFSET, impaleOffset.toVector3f());
+    }
     public boolean isHurled() { return this.entityData.get(HURLED); }
     public void setHurled(boolean value) { this.entityData.set(HURLED, value); }
     public boolean isBoomerang() { return this.entityData.get(BOOMERANG); }
@@ -163,6 +193,7 @@ public class LobbedItem extends AbstractArrow {
             Vec2 rot = this.getDeltaMovement().rotation();
             this.setYRot(rot.y);
             this.setXRot(rot.x);
+            // same as trident loyalty enchantment
             if (boomerangReturning) {
                 int loyalty = 1;
                 Vec3 vec = boomerangReturnPos.subtract(this.position());
@@ -175,23 +206,25 @@ public class LobbedItem extends AbstractArrow {
                 }
             }
         }
+
         if (this.level().isClientSide()) {
-            // attempt to re attach to entity after it becomes unloaded
+            // attempt to re attach to entity after it becomes unloaded on the client
             if (impaledEntity != null
                     && impaledEntity.isRemoved()
                     && impaledEntity.getRemovalReason() == RemovalReason.DISCARDED
             ) {
-                impaledEntity = level().getEntity(impaledEntity.getUUID());
+                impaledEntity = level().getEntity(impaledEntityUUID);
             }
             return;
         }
+        // apply impale offset on the server
         if (isInEntity()) {
-
-            float impaledBodyRot = impaledEntity.getYRot();
+            Entity inEntity = getInEntity();
+            float impaledBodyRot = inEntity.getYRot();
             Vec3 offset = Vec3.applyLocalCoordinatesToRotation(new Vec2(0, impaledBodyRot), getImpaleOffset());
-            this.setPos(impaledEntity.position().add(offset));
+            this.setPos(inEntity.position().add(offset));
 
-            if (!impaledEntity.isAlive() || impaledEntity.isRemoved()) {
+            if (!inEntity.isAlive() || inEntity.isRemoved()) {
                 drop(10);
             }
         }
@@ -330,21 +363,14 @@ public class LobbedItem extends AbstractArrow {
     }
 
     public void impaleEntity(Entity entity, Vec3 impalePos, Vec2 impaleRotation) {
-        this.impaledEntity = entity;
-        setImpaleOffset(impalePos);
+        setInEntity(entity);
+        setImpaleOffset(impalePos, entity.position(), entity.getYRot());
         setDeltaMovement(Vec3.ZERO);
         this.setNoPhysics(true);
         this.setNoGravity(true);
-        this.entityData.set(IMPALED_ENTITY, entity.getId());
         this.entityData.set(IMPALE_ROT_X, impaleRotation.x);
         this.entityData.set(IMPALE_ROT_Y, impaleRotation.y - entity.getYRot());
         if (entity instanceof Mob mob) mob.setPersistenceRequired();
-    }
-
-    public void setImpaleOffset(Vec3 impalePos) {
-        Vec3 localImpalePos = impalePos.subtract(impaledEntity.position());
-        Vec3 impaleOffset = Vec3.applyLocalCoordinatesToRotation(new Vec2(0, -impaledEntity.getYRot()), localImpalePos);
-        this.entityData.set(IMPALE_OFFSET, impaleOffset.toVector3f());
     }
 
     @Override
@@ -393,13 +419,5 @@ public class LobbedItem extends AbstractArrow {
     @Override
     protected void tickDespawn() {
         // dont
-    }
-
-    @Override
-    public void setPos(double x, double y, double z) {
-        if (this.isInEntity()) {
-            //setImpaleOffset(new Vec3(x, y, z));
-        }
-        super.setPos(x, y, z);
     }
 }
