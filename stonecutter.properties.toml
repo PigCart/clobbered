@@ -19,3 +19,10 @@ version_range = ">=26.1"
 
 deps.fabric-api = "0.145.3+26.1.1"
 deps.modmenu = "18.0.0-alpha.8"
+
+["26.2-fabric"]
+deps.minecraft = "26.2"
+version_range = ">=26.2"
+
+deps.fabric-api = "0.154.0+26.2"
+deps.modmenu = "20.0.0-beta.4"

@@ -25,10 +25,18 @@ import java.util.stream.Stream;
 public class Util {
 
     public static void hotbarMessage(Component component) {
+        //? >=26.2 {
+        /*Minecraft.getInstance().gui.hud.setOverlayMessage(component, false);
+        *///?} else {
         Minecraft.getInstance().gui.setOverlayMessage(component, false);
+        //?}
     }
     public static void hotbarMessage(Object o) {
+        //? >=26.2 {
+        /*Minecraft.getInstance().gui.hud.setOverlayMessage(Component.literal(String.valueOf(o)), false);
+        *///?} else {
         Minecraft.getInstance().gui.setOverlayMessage(Component.literal(String.valueOf(o)), false);
+        //?}
     }
 
     @SuppressWarnings("removal")
@@ -50,10 +58,10 @@ public class Util {
     public static Identifier parseId(String string) {
         try {
             //? if <=1.20.1 {
-            return Identifier.tryParse(string);
-            //?} else {
-            /*return Identifier.parse(string);
-             *///?}
+            /*return Identifier.tryParse(string);
+            *///?} else {
+            return Identifier.parse(string);
+             //?}
         } catch (IdentifierException e) {
             return null;
         }
@@ -100,7 +108,9 @@ public class Util {
     }
 
     static void addChatMsg(String message) {
-        //? >=26.1 {
+        //? >=26.2 {
+        /*Minecraft.getInstance().gui.hud.getChat().addClientSystemMessage(Component.literal(message));
+        *///?} >=26.1 {
         Minecraft.getInstance().gui.getChat().addClientSystemMessage(Component.literal(message));
         //?} else {
         /*Minecraft.getInstance().gui.getChat().addMessage(Component.literal(message));

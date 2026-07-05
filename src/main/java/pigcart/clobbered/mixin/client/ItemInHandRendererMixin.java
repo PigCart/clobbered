@@ -19,6 +19,7 @@ import static pigcart.clobbered.ClobberedClient.throwStrength;
 @Mixin(ItemInHandRenderer.class)
 public class ItemInHandRendererMixin {
 
+    //~ if >=26.2 'renderArmWithItem' -> 'submitArmWithItem'
     @Inject(method = "renderArmWithItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ItemInHandRenderer;renderItem(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemDisplayContext;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;I)V"))
     public void raiseArmToThrow(AbstractClientPlayer player, float frameInterp, float xRot, InteractionHand hand, float attack, ItemStack itemStack, float inverseArmHeight, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords, CallbackInfo ci) {
         if (throwStrength > 0 && hand == InteractionHand.MAIN_HAND) {

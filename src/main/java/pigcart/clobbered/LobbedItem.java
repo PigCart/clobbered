@@ -287,7 +287,7 @@ public class LobbedItem extends AbstractArrow {
     @Override
     protected void onHitEntity(EntityHitResult hitResult) {
         final Entity entity = hitResult.getEntity();
-        if (entity.is(EntityType.ENDERMAN)) { // workaround: damage type tag not working
+        if (entity.is(/*?>=26.2{*//*EntityTypes*//*?}else{*/EntityType/*?}*/.ENDERMAN)) { // workaround: damage type tag not working
             entity.hurtOrSimulate(damageSources().arrow(this, this), 0);
             return;
         }
@@ -314,8 +314,12 @@ public class LobbedItem extends AbstractArrow {
         final ServerLevel level = (ServerLevel) level();
         if (isHurled() && canDamage && itemStack.is(Clobbered.SHARP)) {
             impaleEntity(entity, hitPos, this.getDeltaMovement().rotation());
-            DamageSource damageSource = itemStack.getDamageSource((LivingEntity) this.getOwner(),
-                    () -> this.damageSources().playerAttack((Player) this.getOwner()));
+            DamageSource damageSource = itemStack.getDamageSource((LivingEntity) this.getOwner()
+                    //? >=26.2 {
+            /*);
+                    *///?} else {
+                    ,() -> this.damageSources().playerAttack((Player) this.getOwner()));
+                    //?}
             damage = itemStack.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY)
                     .compute(Attributes.ATTACK_DAMAGE, damage, EquipmentSlot.MAINHAND);
             damage += itemStack.getItem().getAttackDamageBonus(entity, (float) damage, damageSource);
