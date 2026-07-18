@@ -1,19 +1,22 @@
 package pigcart.clobbered;
 
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.gizmos.Gizmos;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.item.ToolMaterial;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.phys.*;
-import net.minecraft.world.phys.shapes.CollisionContext;
+import net.neoforged.neoforge.common.Tags;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pigcart.clobbered.config.ConfigManager;
@@ -21,8 +24,6 @@ import pigcart.clobbered.networking.KickServerboundPayload;
 import pigcart.clobbered.networking.LobItemServerboundPayload;
 
 import java.util.List;
-
-import static pigcart.clobbered.config.ConfigManager.config;
 
 public class Clobbered {
 
@@ -51,9 +52,13 @@ public class Clobbered {
             .noSummon()
             .build(ResourceKey.create(Registries.ENTITY_TYPE, LOBBED_ITEM_ID));
 
-    public static Item BOOMERANG_ITEM;
+    public static Item BOOMERANG_ITEM = new Item(new Item.Properties()
+            .setId(ResourceKey.create(Registries.ITEM, Util.getId("boomerang")))
+            .stacksTo(1)
+            //.tool(ToolMaterial.WOOD, Tags.Blocks.BUDS, 2.5F, -2.4F, 0.5F)
+            .sword(ToolMaterial.WOOD, 2.5F, -2.4F)
+    );
 
-    ///  sets up features that dont require a specific modloader
     public static void onInitialize() {
         ConfigManager.load();
     }
@@ -66,17 +71,17 @@ public class Clobbered {
         return TagKey.create(Registries.ENTITY_TYPE, Util.getId(name));
     }
 
-    public static void handleLobItem(LobItemServerboundPayload payload, ServerPlayNetworking.Context ctx) {
+    public static void handleLobItem(LobItemServerboundPayload payload, ServerPlayer player) {
         int strength = payload.strength();
-        ((PlayerDropExtension) ctx.player()).clobbered$setLobStrength(strength);
-        ctx.player().drop(payload.lobAll());
+        ((PlayerDropExtension) player).clobbered$setLobStrength(strength);
+        player.drop(payload.lobAll());
     }
 
-    public static void handleKick(KickServerboundPayload payload, ServerPlayNetworking.Context ctx) {
-        Vec3 forward = ctx.player().getForward();
-        Vec3 position = ctx.player().position();
+    public static void handleKick(KickServerboundPayload payload, ServerPlayer player) {
+        Vec3 forward = player.getForward();
+        Vec3 position = player.position();
         Vec3 kickPos = position.add(forward.x * 2, 0, forward.z * 2);
-        final List<Entity> kicked = ctx.player().level().getEntitiesOfClass(Entity.class,
+        final List<Entity> kicked = player.level().getEntitiesOfClass(Entity.class,
                 AABB.ofSize(kickPos, 1, 1, 1)
         );
         for (Entity entity : kicked) {

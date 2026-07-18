@@ -21,12 +21,6 @@ ordering = "NONE"
 side = "CLIENT"
 
 [[dependencies.${mod_id}]]
-modId = "forgified_fabric_api"
-type = "required"
-ordering = "NONE"
-side = "BOTH"
-
-[[dependencies.${mod_id}]]
 modId = "minecraft"
 type = "required"
 versionRange="${version_range}"

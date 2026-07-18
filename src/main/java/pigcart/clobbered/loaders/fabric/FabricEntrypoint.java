@@ -1,3 +1,4 @@
+//? if fabric {
 package pigcart.clobbered.loaders.fabric;
 
 import net.fabricmc.api.ModInitializer;
@@ -25,10 +26,9 @@ public class FabricEntrypoint implements ModInitializer {
         init();
     }
 
-    // used also by NeoforgeEntrypoint
     public static void init() {
 
-        Clobbered.BOOMERANG_ITEM = registerItem("boomerang", Item::new, new Item.Properties());
+        Registry.register(BuiltInRegistries.ITEM, Util.getId("boomerang"), Clobbered.BOOMERANG_ITEM);
 
         CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.TOOLS_AND_UTILITIES)
                 .register((creativeTab) -> creativeTab.accept(Clobbered.BOOMERANG_ITEM));
@@ -40,18 +40,16 @@ public class FabricEntrypoint implements ModInitializer {
         PayloadTypeRegistry.serverboundPlay().register(LobItemServerboundPayload.TYPE, LobItemServerboundPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(KickServerboundPayload.TYPE, KickServerboundPayload.CODEC);
 
-        ServerPlayNetworking.registerGlobalReceiver(LobItemServerboundPayload.TYPE, Clobbered::handleLobItem);
-        ServerPlayNetworking.registerGlobalReceiver(KickServerboundPayload.TYPE, Clobbered::handleKick);
+        ServerPlayNetworking.registerGlobalReceiver(LobItemServerboundPayload.TYPE,
+                (payload, ctx) -> Clobbered.handleLobItem(payload, ctx.player())
+        );
+        ServerPlayNetworking.registerGlobalReceiver(KickServerboundPayload.TYPE,
+                (payload, ctx) -> Clobbered.handleKick(payload, ctx.player())
+        );
 
         Registry.register(BuiltInRegistries.ENTITY_TYPE, Clobbered.LOBBED_ITEM_ID, Clobbered.LOBBED_ITEM);
 
         Clobbered.onInitialize();
     }
-
-    public static <T extends Item> T registerItem(String name, Function<Item.Properties, T> itemFactory, Item.Properties settings) {
-        ResourceKey<Item> itemKey = ResourceKey.create(Registries.ITEM, Util.getId(name));
-        T item = itemFactory.apply(settings.setId(itemKey));
-        Registry.register(BuiltInRegistries.ITEM, itemKey, item);
-        return item;
-    }
 }
+//?}

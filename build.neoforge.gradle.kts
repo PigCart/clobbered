@@ -35,11 +35,10 @@ repositories {
     maven("https://maven.neoforged.net/releases/")
     maven("https://maven.parchmentmc.org")
     maven("https://api.modrinth.com/maven")
-    maven("https://maven.su5ed.dev/releases")
 }
 
 dependencies {
-    implementation("org.sinytra.forgified-fabric-api:forgified-fabric-api:${prop("deps.forgified_fabric_api")}")
+
 }
 
 neoForge {
@@ -92,6 +91,6 @@ tasks {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
 }

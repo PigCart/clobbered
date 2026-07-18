@@ -2,7 +2,6 @@ package pigcart.clobbered.mixin.client;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
@@ -58,7 +57,11 @@ public abstract class MinecraftMixin {
                 throwStrength = Math.clamp(throwStrength, config.minimumDropStrength, config.maximumDropStrength);
                 boolean dropAll = this.hasControlDown();
                 LobItemServerboundPayload payload = new LobItemServerboundPayload(throwStrength, dropAll);
-                ClientPlayNetworking.send(payload);
+                //? fabric {
+                net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send(payload);
+                //?} else {
+                /*net.neoforged.neoforge.client.network.ClientPacketDistributor.sendToServer(payload);
+                *///?}
                 ItemStack prediction = this.player.getInventory().removeFromSelected(dropAll);
                 if (!prediction.isEmpty()) this.player.swing(InteractionHand.MAIN_HAND);
                 throwStrength = 0;

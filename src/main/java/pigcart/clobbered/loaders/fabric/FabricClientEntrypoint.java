@@ -1,3 +1,4 @@
+//? if fabric {
 package pigcart.clobbered.loaders.fabric;
 
 import com.mojang.blaze3d.platform.InputConstants;
@@ -24,13 +25,7 @@ public class FabricClientEntrypoint implements ClientModInitializer {
         init();
     }
 
-    // used also by NeoforgeEntrypoint
     public static void init() {
-
-        DebugScreenEntries.register( Util.getId("debug"),
-                (display, level, levelChunk, levelChunk2) ->
-                        display.addToGroup(Util.getId("debuglines"), getDebugLines())
-        );
 
         ClientTickEvents.END_CLIENT_TICK.register(ClobberedClient::onTick);
 
@@ -58,3 +53,4 @@ public class FabricClientEntrypoint implements ClientModInitializer {
         });
     }
 }
+//?}

@@ -312,8 +312,8 @@ public class LobbedItem extends AbstractArrow {
         final boolean canDamage = !itemStack.is(Clobbered.SOFT);
         final Vec3 hitPos = hitResult.getLocation();
         final ServerLevel level = (ServerLevel) level();
-        if (isHurled() && canDamage && itemStack.is(Clobbered.SHARP)) {
-            impaleEntity(entity, hitPos, this.getDeltaMovement().rotation());
+        if (isHurled() && canDamage) {
+            if (itemStack.is(Clobbered.SHARP)) impaleEntity(entity, hitPos, this.getDeltaMovement().rotation());
             DamageSource damageSource = itemStack.getDamageSource((LivingEntity) this.getOwner()
                     //? >=26.2 {
             /*);
