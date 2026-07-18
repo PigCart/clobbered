@@ -11,11 +11,7 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.renderer.entity.EntityRenderers;
 import org.lwjgl.glfw.GLFW;
 import pigcart.clobbered.*;
-import net.minecraft.client.gui.components.debug.DebugScreenEntries;
 import pigcart.clobbered.networking.KickServerboundPayload;
-
-
-import static pigcart.clobbered.ClobberedClient.getDebugLines;
 
 
 public class FabricClientEntrypoint implements ClientModInitializer {
@@ -26,8 +22,6 @@ public class FabricClientEntrypoint implements ClientModInitializer {
     }
 
     public static void init() {
-
-        ClientTickEvents.END_CLIENT_TICK.register(ClobberedClient::onTick);
 
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
             dispatcher.register(ClobberedClient.getCommands());
